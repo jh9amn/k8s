@@ -6,11 +6,7 @@
 - [What is Kubernetes?](#what-is-kubernetes)
 - [Kubernetes Architecture](#Kubernetes-Architecture)
 - [Minikube](#minikube)
-- [kubectl](#kubectl)
-- [Kubernetes Architecture](#kubernetes-architecture)
-- [Pods](#pods)
-- [Deployments](#deployments)
-- [Services](#services)
+
 
 ## Introduction
 
