@@ -22,6 +22,7 @@
 
 - [Introduction](#introduction)
 - [What is Kubernetes?](#what-is-kubernetes)
+- [Kubernetes Architectur](#Kubernetes-Architectur)
 - [Minikube](#minikube)
 - [kubectl](#kubectl)
 - [Kubernetes Architecture](#kubernetes-architecture)
@@ -29,10 +30,11 @@
 - [Deployments](#deployments)
 - [Services](#services)
 
-## Introduction
+### Introduction
 
 kubernattes container orcstation plaform
 kubernates by default cluster in nature
+Kubernetes is an open-source container orchestration platform used to automate the deployment, scaling, and management of containerized applications.
 
 ## What is Kubernetes?
 
@@ -46,16 +48,10 @@ kubernates by default cluster in nature
   - auto scaling
   - auto healing
   - api gateways
- 
-# Kubernetes Architecture Notes
-
-# Kubernetes (K8s)
-
-Kubernetes is an open-source container orchestration platform used to automate the deployment, scaling, and management of containerized applications.
-
+    
 ---
 
-# Kubernetes Architecture
+### Kubernetes Architecture
 
 ```text
                            Kubernetes Cluster
@@ -398,7 +394,7 @@ Worker Node:
 - Container Runtime → Runs Containers
 - kube-proxy → Networking & Load Balancing
 
-## Minikube
+### Minikube
 
 # 🚀 Minikube - Complete Notes
 
