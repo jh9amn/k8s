@@ -1,23 +1,5 @@
 # Kubernetes Notes
 
-## Introduction
-
-## What is Kubernetes?
-
-## Minikube
-
-## kubectl
-
-## Kubernetes Architecture
-
-## Pods
-
-## Deployments
-
-## Services
-
-# Kubernetes Notes
-
 ## 📚 Table of Contents
 
 - [Introduction](#introduction)
