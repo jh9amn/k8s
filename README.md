@@ -4,7 +4,7 @@
 
 - [Introduction](#introduction)
 - [What is Kubernetes?](#what-is-kubernetes)
-- [Kubernetes Architectur](#Kubernetes-Architectur)
+- [Kubernetes Architecture](#Kubernetes-Architecture)
 - [Minikube](#minikube)
 - [kubectl](#kubectl)
 - [Kubernetes Architecture](#kubernetes-architecture)
@@ -12,7 +12,7 @@
 - [Deployments](#deployments)
 - [Services](#services)
 
-### Introduction
+## Introduction
 
 kubernattes container orcstation plaform
 kubernates by default cluster in nature
@@ -33,7 +33,7 @@ Kubernetes is an open-source container orchestration platform used to automate t
     
 ---
 
-### Kubernetes Architecture
+## Kubernetes Architecture
 
 ```text
                            Kubernetes Cluster
@@ -89,13 +89,13 @@ Kubernetes is an open-source container orchestration platform used to automate t
 
 ---
 
-# Control Plane Components
+### Control Plane Components
 
 The Control Plane manages the entire Kubernetes cluster. It decides **what should run, where it should run, and continuously monitors the cluster state.**
 
 ---
 
-## 1. API Server
+#### 1. API Server
 
 ### Purpose
 - Entry point of Kubernetes.
@@ -113,7 +113,7 @@ The Control Plane manages the entire Kubernetes cluster. It decides **what shoul
 
 ---
 
-## 2. Scheduler
+#### 2. Scheduler
 
 ### Purpose
 
@@ -142,7 +142,7 @@ Pod assigned to Node-2
 
 ---
 
-## 3. etcd
+#### 3. etcd
 
 ### Purpose
 
@@ -164,7 +164,7 @@ If etcd is lost, the cluster loses its state.
 
 ---
 
-## 4. Controller Manager
+#### 4. Controller Manager
 
 ### Purpose
 
@@ -200,7 +200,7 @@ Other Controllers
 
 ---
 
-## 5. Cloud Controller Manager (CCM)
+#### 5. Cloud Controller Manager (CCM)
 
 Used only when Kubernetes runs on Cloud Providers.
 
@@ -221,13 +221,13 @@ Without CCM, Kubernetes cannot communicate with cloud provider APIs.
 
 ---
 
-# Worker Node Components (Data Plane)
+### Worker Node Components (Data Plane)
 
 Worker Nodes actually run your applications.
 
 ---
 
-## 1. kubelet
+#### 1. kubelet
 
 ### Purpose
 
@@ -246,7 +246,7 @@ Think of kubelet as the **manager of a worker node**.
 
 ---
 
-## 2. Container Runtime
+#### 2. Container Runtime
 
 Responsible for running containers.
 
@@ -265,7 +265,7 @@ Responsibilities
 
 ---
 
-## 3. kube-proxy
+#### 3. kube-proxy
 
 Handles networking inside Kubernetes.
 
@@ -295,7 +295,7 @@ Traffic is automatically balanced among Pods.
 
 ---
 
-# Complete Workflow
+### Complete Workflow
 
 ```
 User
@@ -319,7 +319,7 @@ Application Running
 
 ---
 
-# Responsibilities Summary
+### Responsibilities Summary
 
 | Component | Responsibility |
 |-----------|----------------|
@@ -334,7 +334,7 @@ Application Running
 
 ---
 
-# Easy Interview Mnemonic
+### Easy Interview Mnemonic
 
 **API Server**
 > Accepts every request.
@@ -362,7 +362,7 @@ Application Running
 
 ---
 
-# Quick Revision (30 Seconds)
+### Quick Revision (30 Seconds)
 
 Control Plane:
 - API Server → Entry Point
@@ -376,11 +376,9 @@ Worker Node:
 - Container Runtime → Runs Containers
 - kube-proxy → Networking & Load Balancing
 
-### Minikube
+## Minikube
 
-# 🚀 Minikube - Complete Notes
-
-## 📖 What is Minikube?
+### 📖 What is Minikube?
 
 **Minikube** is a tool that allows you to run a **single-node Kubernetes cluster** on your local machine.
 
@@ -392,7 +390,7 @@ It provides a lightweight Kubernetes environment for **learning, development, an
 
 ---
 
-# 🤔 Why Do We Need Minikube?
+### 🤔 Why Do We Need Minikube?
 
 Setting up a real Kubernetes cluster requires:
 
@@ -420,7 +418,7 @@ Within a few minutes, you have a fully functional Kubernetes cluster running loc
 
 ---
 
-# ⚙️ What Happens When You Run `minikube start`?
+### ⚙️ What Happens When You Run `minikube start`?
 
 When you execute:
 
@@ -446,7 +444,7 @@ Finally, you'll see:
 
 ---
 
-# 🏗️ What Components Does Minikube Install?
+### 🏗️ What Components Does Minikube Install?
 
 A Minikube node contains nearly all Kubernetes components.
 
@@ -478,9 +476,9 @@ Unlike a production cluster, all components run on a **single machine**.
 
 ---
 
-# 🏢 Production Cluster vs Minikube
+### 🏢 Production Cluster vs Minikube
 
-## Production Kubernetes Cluster
+#### Production Kubernetes Cluster
 
 ```text
                 Control Plane
@@ -507,7 +505,7 @@ Unlike a production cluster, all components run on a **single machine**.
 
 ---
 
-## Minikube Cluster
+#### Minikube Cluster
 
 ```text
 +--------------------------------+
@@ -527,7 +525,7 @@ Everything runs inside a single node.
 
 ---
 
-# 🎯 Why Use Minikube?
+### 🎯 Why Use Minikube?
 
 Minikube is ideal for:
 
@@ -539,7 +537,7 @@ Minikube is ideal for:
 
 ---
 
-# ❌ Why Isn't Minikube Used in Production?
+### ❌ Why Isn't Minikube Used in Production?
 
 Minikube is designed only for development because:
 
@@ -553,11 +551,11 @@ Production environments require multiple nodes distributed across servers.
 
 ---
 
-# 🖥️ What is a Node?
+### 🖥️ What is a Node?
 
 A **Node** is simply a machine where Kubernetes runs.
 
-## Production
+#### Production
 
 ```text
 Node 1
@@ -566,7 +564,7 @@ Node 3
 Node 4
 ```
 
-## Minikube
+#### Minikube
 
 ```text
 Node 1
@@ -581,7 +579,7 @@ That node acts as both:
 
 ---
 
-# 🏛️ Minikube Architecture
+#### 🏛️ Minikube Architecture
 
 ```text
                  Your Laptop
@@ -613,7 +611,7 @@ That node acts as both:
 
 ---
 
-# 🔄 How Does Minikube Work with kubectl?
+### 🔄 How Does Minikube Work with kubectl?
 
 `kubectl` is the command-line client used to communicate with Kubernetes.
 
@@ -646,7 +644,7 @@ The API Server is the entry point to Kubernetes. It communicates with other comp
 
 ---
 
-# 📦 Common Minikube Commands
+### 📦 Common Minikube Commands
 
 | Command | Description |
 |----------|-------------|
@@ -661,7 +659,7 @@ The API Server is the entry point to Kubernetes. It communicates with other comp
 
 ---
 
-# 👨‍💻 Can Minikube Create Multiple Nodes?
+### 👨‍💻 Can Minikube Create Multiple Nodes?
 
 Yes.
 
@@ -690,7 +688,7 @@ This is useful for learning:
 
 ---
 
-# 📊 Minikube vs Production Kubernetes
+### 📊 Minikube vs Production Kubernetes
 
 | Feature | Minikube | Production Kubernetes |
 |----------|----------|----------------------|
@@ -704,7 +702,7 @@ This is useful for learning:
 
 ---
 
-# 📌 Key Takeaways
+### 📌 Key Takeaways
 
 - Minikube is a lightweight local Kubernetes environment.
 - It creates a Kubernetes cluster on your computer.
@@ -715,7 +713,7 @@ This is useful for learning:
 
 ---
 
-# 💡 Easy Analogy
+### 💡 Easy Analogy
 
 Imagine Kubernetes as a city.
 
