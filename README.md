@@ -6,7 +6,7 @@
 - [What is Kubernetes?](#what-is-kubernetes)
 - [Kubernetes Architecture](#Kubernetes-Architecture)
 - [Minikube](#minikube)
-- [What is a Pod in Kubernetes?](#What-is-a-Pod-in-Kubernetes)
+- [What is a Pod in Kubernetes?](What-is-a-Pod-in-Kubernetes)
 
 
 ## Introduction
