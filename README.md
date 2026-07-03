@@ -7,6 +7,9 @@
 - [Kubernetes Architecture](#Kubernetes-Architecture)
 - [Minikube](#minikube)
 - [What is a Pod in Kubernetes?](#What-is-a-Pod-in-Kubernetes)
+- 📄 [Kubectl Cheat Sheet](https://kubernetes.io/docs/reference/kubectl/quick-reference/)
+- 📖 [Kubernetes Documentation](https://kubernetes.io/docs/)
+- 🚀 [Minikube Documentation](https://minikube.sigs.k8s.io/docs/)
 
 
 ## Introduction
@@ -1080,4 +1083,7 @@ Cluster
 * **Pod** → Wraps one or more containers
 * **Node** → Runs Pods
 * **Cluster** → A collection of Nodes managed by Kubernetes
+
+
+
 
