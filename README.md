@@ -6,7 +6,7 @@
 - [What is Kubernetes?](#what-is-kubernetes)
 - [Kubernetes Architecture](#Kubernetes-Architecture)
 - [Minikube](#minikube)
-- [What is a Pod in Kubernetes?](What-is-a-Pod-in-Kubernetes)
+- [What is a Pod in Kubernetes?](#What-is-a-Pod-in-Kubernetes)
 
 
 ## Introduction
@@ -720,7 +720,7 @@ Imagine Kubernetes as a city.
 This makes Minikube the perfect playground for learning Kubernetes before managing real-world clusters.
 
 
-# 📦 What is a Pod in Kubernetes?
+## 📦 What is a Pod in Kubernetes?
 
 A **Pod** is the **smallest deployable unit in Kubernetes**.
 
