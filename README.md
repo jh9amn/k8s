@@ -24,7 +24,7 @@
     - [LoadBalancer](#loadbalancer)
     - [ExternalName](#externalname)
   - [Example YAML](#example-yaml)
-  - [Summary](#summary)
+  - [Services summary](#services-summary)
 
 
 ## Introduction
@@ -1987,7 +1987,7 @@ No proxying is done—the Service simply returns the external DNS name.
 
 ---
 
-# Summary
+# Services summary
 
 A **Service** is a stable networking layer that sits in front of Pods.
 
