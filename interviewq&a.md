@@ -1,5 +1,5 @@
 - [1) What is the Difference Between Docker and Kubernetes?](#1-what-is-the-difference-between-docker-and-kubernetes)
-- [2)# What are the main component of kubernetes architecture ?](#2-What-are-the-main-component-of-kubernetes-architecture)
+- [2) What are the main component of kubernetes architecture ?](#2-What-are-the-main-component-of-kubernetes-architecture)
 
 # 1) What is the Difference Between Docker and Kubernetes?
 Docker and Kubernetes are often used together, but **they solve different problems**.
