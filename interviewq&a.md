@@ -1,4 +1,5 @@
 - [1) What is the Difference Between Docker and Kubernetes?](#1-what-is-the-difference-between-docker-and-kubernetes)
+- [2)# What are the main component of kubernetes architecture ?](#2-What-are-the-main-component-of-kubernetes-architecture)
 
 # 1) What is the Difference Between Docker and Kubernetes?
 Docker and Kubernetes are often used together, but **they solve different problems**.
@@ -441,3 +442,390 @@ Docker is **not required** as the runtime.
 * **Docker** packages your application into a portable container and runs it consistently across environments.
 * **Kubernetes** manages large numbers of containers, ensuring they stay healthy, scale with demand, recover from failures, and are accessible to users.
 * In a typical production workflow, you **build the application with Docker (or another image builder)**, store the image in a registry, and **use Kubernetes to deploy and manage those containers** across a cluster.
+  
+----
+
+# What are the main component of kubernetes architecture ?
+
+The Kubernetes architecture is divided into **two main parts**:
+
+1. **Control Plane (Master Node)** – Makes decisions and manages the cluster.
+2. **Worker Nodes (Data Plane)** – Runs your applications inside Pods.
+
+---
+
+# Kubernetes Architecture
+
+```text
+                   Kubernetes Cluster
+   -------------------------------------------------
+
+               Control Plane (Master Node)
+   +------------------------------------------------+
+   | API Server                                     |
+   | Scheduler                                      |
+   | Controller Manager                             |
+   | etcd                                           |
+   | Cloud Controller Manager (Optional)            |
+   +------------------------------------------------+
+                      |
+      -----------------------------------------
+      |                  |                    |
++-------------+   +-------------+    +-------------+
+| Worker Node |   | Worker Node |    | Worker Node |
++-------------+   +-------------+    +-------------+
+| Kubelet     |   | Kubelet     |    | Kubelet     |
+| Kube Proxy  |   | Kube Proxy  |    | Kube Proxy  |
+| Container   |   | Container   |    | Container   |
+| Runtime     |   | Runtime     |    | Runtime     |
+| Pods        |   | Pods        |    | Pods        |
++-------------+   +-------------+    +-------------+
+```
+
+---
+
+# 1. Control Plane (Master Node)
+
+The **Control Plane** is the **brain of Kubernetes**. It manages the entire cluster and decides where applications should run.
+
+### Components
+
+## A. API Server
+
+The **API Server** is the entry point of Kubernetes.
+
+### Responsibilities
+
+* Receives all user requests
+* Validates requests
+* Authenticates users
+* Updates the cluster state in `etcd`
+* Communicates with every Kubernetes component
+
+### Example
+
+```bash
+kubectl apply -f deployment.yaml
+```
+
+Flow:
+
+```text
+kubectl
+   │
+   ▼
+API Server
+   │
+   ▼
+Other Kubernetes Components
+```
+
+Without the API Server, no Kubernetes component communicates directly with users.
+
+---
+
+## B. Scheduler
+
+The **Scheduler** decides **which Worker Node should run a Pod**.
+
+It checks:
+
+* Available CPU
+* Available Memory
+* Node health
+* Labels and taints
+* Resource requests
+
+Example:
+
+```text
+Pod Created
+
+↓
+
+Scheduler checks nodes
+
+↓
+
+Node 2 has enough resources
+
+↓
+
+Assign Pod to Node 2
+```
+
+The scheduler **does not create Pods**; it only chooses the best node.
+
+---
+
+## C. Controller Manager
+
+The **Controller Manager** continuously watches the cluster and ensures the desired state matches the actual state.
+
+Examples of controllers:
+
+* ReplicaSet Controller
+* Deployment Controller
+* Node Controller
+* Job Controller
+* Endpoint Controller
+
+Example:
+
+Desired state:
+
+```text
+Replicas = 3
+```
+
+Current state:
+
+```text
+Running Pods = 2
+```
+
+Controller Manager detects the difference and creates one more Pod.
+
+---
+
+## D. etcd
+
+`etcd` is Kubernetes' distributed key-value database.
+
+It stores:
+
+* Cluster configuration
+* Deployments
+* Services
+* Secrets
+* ConfigMaps
+* Nodes
+* Pods
+* Cluster state
+
+Example:
+
+```text
+User creates Deployment
+
+↓
+
+API Server
+
+↓
+
+etcd stores Deployment information
+```
+
+If `etcd` is lost and has no backup, the cluster state cannot be recovered.
+
+---
+
+## E. Cloud Controller Manager (Optional)
+
+Used when Kubernetes runs on cloud platforms like:
+
+* AWS
+* Azure
+* Google Cloud
+
+Responsibilities:
+
+* Create Load Balancers
+* Manage cloud disks
+* Manage cloud networking
+* Manage cloud nodes
+
+It is not required for local clusters like Minikube.
+
+---
+
+# 2. Worker Node (Data Plane)
+
+The **Worker Node** is where your application actually runs.
+
+Each Worker Node contains:
+
+* Kubelet
+* Kube Proxy
+* Container Runtime
+* Pods
+
+---
+
+## A. Kubelet
+
+The **Kubelet** is the agent running on every Worker Node.
+
+Responsibilities:
+
+* Registers the node with the cluster
+* Receives Pod instructions from the API Server
+* Talks to the container runtime
+* Starts containers
+* Monitors Pod health
+* Reports status back to the Control Plane
+
+Example:
+
+```text
+API Server
+
+↓
+
+Kubelet
+
+↓
+
+Container Runtime
+
+↓
+
+Pod Starts
+```
+
+---
+
+## B. Kube Proxy
+
+`kube-proxy` handles networking on the Worker Node.
+
+Responsibilities:
+
+* Assigns networking rules
+* Enables Pod-to-Pod communication
+* Implements Service load balancing
+* Forwards traffic to the correct Pods
+
+Example:
+
+```text
+User
+
+↓
+
+Service
+
+↓
+
+kube-proxy
+
+↓
+
+Pod 1
+Pod 2
+Pod 3
+```
+
+---
+
+## C. Container Runtime
+
+The **Container Runtime** runs the containers.
+
+Common runtimes:
+
+* containerd
+* CRI-O
+
+(Older Kubernetes versions could use Docker through a shim, but modern Kubernetes uses CRI-compatible runtimes directly.)
+
+Responsibilities:
+
+* Pull container images
+* Create containers
+* Start containers
+* Stop containers
+* Delete containers
+
+---
+
+## D. Pods
+
+A **Pod** is the smallest deployable unit in Kubernetes.
+
+A Pod can contain:
+
+* One container (most common)
+* Multiple tightly coupled containers
+
+Example:
+
+```text
+Pod
+ ├── Application Container
+ └── Sidecar Container (optional)
+```
+
+---
+
+# Complete Request Flow
+
+```text
+User
+
+↓
+
+kubectl apply
+
+↓
+
+API Server
+
+↓
+
+etcd stores desired state
+
+↓
+
+Scheduler selects Worker Node
+
+↓
+
+Kubelet receives instruction
+
+↓
+
+Container Runtime creates Pod
+
+↓
+
+Pod starts
+
+↓
+
+kube-proxy exposes networking
+
+↓
+
+Application becomes available
+```
+
+---
+
+# Component Summary
+
+| Component                    | Purpose                                                   |
+| ---------------------------- | --------------------------------------------------------- |
+| **API Server**               | Entry point for all Kubernetes requests                   |
+| **Scheduler**                | Chooses the best Worker Node for Pods                     |
+| **Controller Manager**       | Maintains the desired state of the cluster                |
+| **etcd**                     | Stores all cluster data and configuration                 |
+| **Cloud Controller Manager** | Integrates Kubernetes with cloud services                 |
+| **Kubelet**                  | Runs and monitors Pods on each Worker Node                |
+| **Kube Proxy**               | Manages networking and Service load balancing             |
+| **Container Runtime**        | Pulls images and runs containers                          |
+| **Pod**                      | Smallest deployable unit that runs application containers |
+
+### Easy way to remember
+
+* **Control Plane = Brain** → Decides **what should happen**.
+* **Worker Nodes = Muscles** → Actually **run your applications**.
+* **API Server = Gatekeeper** → Receives all requests.
+* **Scheduler = Planner** → Chooses where Pods should run.
+* **Controller Manager = Supervisor** → Ensures the desired state is maintained.
+* **etcd = Database** → Stores the cluster's configuration and state.
+* **Kubelet = Worker** → Creates and monitors Pods.
+* **kube-proxy = Network Manager** → Routes traffic to the correct Pods.
+* **Container Runtime = Engine** → Runs the containers inside Pods.
+
