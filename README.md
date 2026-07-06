@@ -10,6 +10,7 @@
 - 📄 [Kubectl Cheat Sheet](https://kubernetes.io/docs/reference/kubectl/quick-reference/)
 - 📖 [Kubernetes Documentation](https://kubernetes.io/docs/)
 - 🚀 [Minikube Documentation](https://minikube.sigs.k8s.io/docs/)
+- [How kubernates implement autohealing property](#How-kubernates-implement-autohealing-property)
 
 
 ## Introduction
@@ -1083,6 +1084,461 @@ Cluster
 * **Pod** → Wraps one or more containers
 * **Node** → Runs Pods
 * **Cluster** → A collection of Nodes managed by Kubernetes
+
+## How kubernates implement autohealing property
+
+Kubernetes provides **self-healing (auto-healing)** by constantly comparing the **desired state** of your application with the **current state** of the cluster. If they don't match, Kubernetes automatically takes action to restore the desired state.
+
+Let's understand this from the inside.
+
+---
+
+# 1. Desired State vs Current State
+
+When you create a deployment like this:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+
+spec:
+  replicas: 3
+
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+```
+
+You are telling Kubernetes:
+
+> "I always want **3 running nginx pods**."
+
+This is called the **Desired State**.
+
+Suppose currently the cluster has
+
+```
+Pod 1  Running
+Pod 2  Running
+Pod 3  Running
+```
+
+Current State = Desired State
+
+Everything is fine.
+
+---
+
+# 2. What if one pod crashes?
+
+Suppose Pod 2 crashes.
+
+Current state becomes
+
+```
+Pod 1  Running
+Pod 2  Crashed ❌
+Pod 3  Running
+```
+
+Now Kubernetes notices
+
+```
+Desired Pods = 3
+Current Pods = 2
+```
+
+Mismatch detected.
+
+---
+
+# 3. Who detects this?
+
+The **Kubernetes Controller Manager**.
+
+Inside Controller Manager there are multiple controllers.
+
+For Deployments:
+
+```
+Deployment Controller
+        ↓
+ReplicaSet Controller
+        ↓
+Pods
+```
+
+ReplicaSet Controller continuously checks
+
+```
+Desired replicas = 3
+
+Actual replicas = 2
+
+Need = +1 pod
+```
+
+It immediately asks the API Server
+
+```
+Create one more Pod.
+```
+
+---
+
+# Internal Flow
+
+```
+User
+
+kubectl apply -f deployment.yaml
+          │
+          ▼
+API Server
+          │
+          ▼
+etcd
+Stores:
+replicas = 3
+```
+
+Controller Manager continuously watches the API Server.
+
+```
+Controller Manager
+
+Desired = 3
+
+Current = 2
+
+Need = Create 1 Pod
+```
+
+Then
+
+```
+Scheduler
+
+Find a healthy node
+```
+
+Suppose Node 2 has free memory.
+
+```
+Scheduler
+
+Assign Pod
+
+↓
+
+Node 2
+```
+
+Then kubelet on Node 2 receives
+
+```
+Create nginx container
+```
+
+Container Runtime
+
+```
+Pull Image
+
+↓
+
+Create Container
+
+↓
+
+Pod Running
+```
+
+Now again
+
+```
+Pod1 Running
+Pod2 Running (new)
+Pod3 Running
+```
+
+Desired == Current
+
+Cluster becomes healthy again.
+
+---
+
+# Complete Architecture
+
+```text
+               kubectl apply
+                     │
+                     ▼
+              +---------------+
+              |   API Server  |
+              +---------------+
+                     │
+                     ▼
+                +---------+
+                |  etcd   |
+                +---------+
+                     ▲
+                     │
+     watches desired state
+                     │
+       +--------------------------+
+       | Controller Manager       |
+       | ReplicaSet Controller    |
+       +--------------------------+
+                     │
+      Desired = 3
+      Current = 2
+                     │
+          Create New Pod
+                     ▼
+             +---------------+
+             |   Scheduler   |
+             +---------------+
+                     │
+         Select Healthy Node
+                     ▼
+         +--------------------+
+         |      Kubelet       |
+         +--------------------+
+                     │
+          Container Runtime
+                     │
+                     ▼
+               New Pod Running
+```
+
+---
+
+# 4. What if the Node itself dies?
+
+Suppose
+
+```
+Node 1
+```
+
+suddenly loses power.
+
+Pods running there become unreachable.
+
+```
+Node 1 ❌
+
+Pod A
+Pod B
+```
+
+The **Node Controller** (inside the Controller Manager) notices that the node has stopped sending heartbeat messages.
+
+```
+Node Status
+
+Ready = False
+```
+
+The Node Controller marks it as unavailable.
+
+The ReplicaSet then observes:
+
+```
+Desired Pods = 3
+
+Available Pods = 1
+```
+
+It creates replacement pods on healthy nodes.
+
+```
+Node 2
+
+Pod A (new)
+
+Node 3
+
+Pod B (new)
+```
+
+---
+
+# 5. How does Kubernetes know a Pod is unhealthy?
+
+Kubernetes uses **Probes**.
+
+### Liveness Probe
+
+Checks:
+
+> Is the application still alive?
+
+Example:
+
+```yaml
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+```
+
+If the application stops responding:
+
+```
+Health Check
+
+↓
+
+Fail
+
+↓
+
+kubelet kills container
+
+↓
+
+Container restarted
+```
+
+---
+
+### Readiness Probe
+
+Checks:
+
+> Is the application ready to receive traffic?
+
+If not ready:
+
+```
+Service
+
+↓
+
+Remove Pod from Load Balancer
+```
+
+Traffic is no longer sent to that pod until it becomes ready again.
+
+---
+
+### Startup Probe
+
+Useful for applications that take a long time to start.
+
+```
+App Starting...
+
+↓
+
+Startup Probe
+
+↓
+
+Only after success
+
+↓
+
+Liveness Probe begins
+```
+
+This prevents Kubernetes from restarting slow-starting applications too early.
+
+---
+
+# 6. Who actually restarts the container?
+
+The **kubelet** on each node.
+
+It constantly watches the Pod specification.
+
+If a container exits unexpectedly:
+
+```
+Container
+
+↓
+
+Crash
+
+↓
+
+kubelet
+
+↓
+
+Restart Container
+```
+
+This is controlled by the Pod's `restartPolicy` (for Deployments, it is effectively `Always`).
+
+---
+
+# 7. Example Timeline
+
+```text
+Time 0
+------
+Pod Running
+
+Time 5
+------
+Application crashes
+
+Time 6
+------
+Liveness Probe fails
+
+Time 7
+------
+kubelet restarts container
+
+Time 8
+------
+Container Running
+
+Time 10
+-------
+If restart fails repeatedly
+
+ReplicaSet creates replacement Pod
+```
+
+---
+
+# Components Responsible for Self-Healing
+
+| Component                             | Responsibility                                                            |
+| ------------------------------------- | ------------------------------------------------------------------------- |
+| API Server                            | Stores and exposes the desired state                                      |
+| etcd                                  | Persists the cluster state                                                |
+| Controller Manager                    | Detects differences between desired and current state and reconciles them |
+| ReplicaSet Controller                 | Ensures the required number of Pod replicas are running                   |
+| Node Controller                       | Detects failed or unreachable nodes                                       |
+| Scheduler                             | Places replacement Pods on suitable nodes                                 |
+| kubelet                               | Restarts failed containers and reports Pod status                         |
+| Probes (Liveness, Readiness, Startup) | Detect unhealthy or unready applications                                  |
+
+---
+
+## Summary
+
+Kubernetes' self-healing works through a continuous **reconciliation loop**:
+
+1. You declare the **desired state** (e.g., 3 replicas).
+2. The **API Server** stores that state in **etcd**.
+3. The **Controller Manager** continuously compares the desired state with the actual state.
+4. If Pods crash or Nodes fail, controllers detect the mismatch.
+5. The **Scheduler** assigns replacement Pods to healthy nodes.
+6. The **kubelet** starts or restarts containers as needed.
+7. Health probes help Kubernetes detect unhealthy applications and recover them automatically.
+
+This continuous monitoring and reconciliation is the core reason Kubernetes can automatically recover from many common failures without manual intervention.
+
 
 
 
