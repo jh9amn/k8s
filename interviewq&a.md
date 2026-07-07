@@ -445,7 +445,7 @@ Docker is **not required** as the runtime.
   
 ----
 
-# What are the main component of kubernetes architecture ?
+# 2) What are the main component of kubernetes architecture ?
 
 The Kubernetes architecture is divided into **two main parts**:
 
