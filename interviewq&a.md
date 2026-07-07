@@ -831,7 +831,7 @@ Application becomes available
 * **Container Runtime = Engine** → Runs the containers inside Pods.
 ----
 
-# 3) what are the main difference b/w the docker swarm and kubernetes?
+# 3) What are the main difference b/w the docker swarm and kubernetes?
 
 Docker Swarm and Kubernetes are both **container orchestration tools**, but they differ in complexity, scalability, and features.
 
