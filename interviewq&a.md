@@ -1430,7 +1430,7 @@ Kubernetes automatically creates three Pods.
 
 ----
 
-# What is a Namespace in Kubernetes?
+# 5) What is a Namespace in Kubernetes?
 
 A **Namespace** in Kubernetes is a **logical partition** within a cluster that helps organize and isolate resources. It allows multiple teams, projects, or environments to share the same Kubernetes cluster without interfering with each other.
 
