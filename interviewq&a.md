@@ -3,6 +3,7 @@
 - [3) What are the main difference between the docker swarm and kubernetes?](#3-What-are-the-main-difference-between-the-docker-swarm-and-kubernetes)
 - [4) What is the difference between Docker container and a Kubernetes pod?](#4-What-is-the-difference-between-Docker-container-and-a-Kubernetes-pod)
 - [5) What is a Namespace in Kubernetes?](#5-What-is-a-Namespace-in-Kubernetes)
+- [6) What is role of kube-proxy in Kubernetes?](#6-What-is-role-of-kube-proxy-in-Kubernetes)
 
 # 1) What is the Difference Between Docker and Kubernetes?
 Docker and Kubernetes are often used together, but **they solve different problems**.
@@ -1764,4 +1765,322 @@ Everyone shares the same building, but each department works independently.
 
 > **In simple words:** A **Namespace** is a virtual partition inside a Kubernetes cluster that helps organize, isolate, and manage resources for different teams, applications, or environments.
 
+----
+
+# 6) What is role of kube-proxy in Kubernetes?
+
+**kube-proxy** is a **network component** that runs on **every Worker Node** in a Kubernetes cluster. Its primary job is to **route network traffic to the correct Pods** and implement Kubernetes **Service** networking.
+
+> **kube-proxy = Network Manager of a Worker Node**
+
+It ensures that users and applications can communicate with Pods, even when Pods are created, deleted, or moved to different nodes.
+
+---
+
+# Why Do We Need kube-proxy?
+
+Pods are **ephemeral**, meaning they can be created and destroyed at any time.
+
+Example:
+
+```text
+Node 1
+
+Pod A (IP: 10.244.1.2)
+
+↓
+
+Pod crashes
+
+↓
+
+New Pod A (IP: 10.244.1.15)
+```
+
+The Pod's IP address changes.
+
+If clients connected directly to the Pod IP, the application would stop working.
+
+Instead, Kubernetes creates a **Service** with a stable virtual IP, and **kube-proxy** forwards traffic from the Service to the currently healthy Pods.
+
+---
+
+# Real-Life Analogy
+
+Imagine a customer calling a company's support number.
+
+```text
+Customer
+
+↓
+
+Reception Desk
+
+↓
+
+Available Support Engineer
+```
+
+- **Customer** = User
+- **Reception Desk** = kube-proxy (through the Service)
+- **Support Engineer** = Pod
+
+The customer always calls the same number, even if a different engineer answers.
+
+---
+
+# How kube-proxy Works
+
+Suppose you have three Pods:
+
+```text
+Pod 1  → 10.244.1.2
+Pod 2  → 10.244.1.3
+Pod 3  → 10.244.1.4
+```
+
+A Service is created:
+
+```text
+Service IP
+
+10.96.0.10
+```
+
+Traffic flow:
+
+```text
+User
+ │
+ ▼
+Service (10.96.0.10)
+ │
+ ▼
+kube-proxy
+ ├── Pod 1
+ ├── Pod 2
+ └── Pod 3
+```
+
+kube-proxy decides which Pod should receive each request.
+
+---
+
+# Main Responsibilities of kube-proxy
+
+## 1. Service Discovery
+
+When a Service is created:
+
+```yaml
+kind: Service
+metadata:
+  name: frontend-service
+```
+
+kube-proxy watches the Kubernetes API and learns:
+
+- Service IP
+- Service Port
+- Backend Pods
+
+It updates the node's networking rules accordingly.
+
+---
+
+## 2. Load Balancing
+
+Suppose there are three Pods.
+
+```text
+Pod 1
+Pod 2
+Pod 3
+```
+
+Requests arrive:
+
+```text
+Request 1 → Pod 1
+
+Request 2 → Pod 2
+
+Request 3 → Pod 3
+
+Request 4 → Pod 1
+```
+
+Traffic is distributed among healthy Pods.
+
+---
+
+## 3. Routing Traffic
+
+kube-proxy forwards traffic from a Service to the correct Pod.
+
+```text
+User
+
+↓
+
+Service
+
+↓
+
+kube-proxy
+
+↓
+
+Correct Pod
+```
+
+Without kube-proxy, the Service would not know where to send requests.
+
+---
+
+## 4. Updating Network Rules
+
+Suppose:
+
+```text
+Pod 2 crashes.
+```
+
+Kubernetes creates a replacement Pod.
+
+```text
+Pod 4
+```
+
+kube-proxy updates the routing rules automatically.
+
+Before:
+
+```text
+Service
+
+↓
+
+Pod 1
+Pod 2
+Pod 3
+```
+
+After:
+
+```text
+Service
+
+↓
+
+Pod 1
+Pod 3
+Pod 4
+```
+
+The user continues using the same Service IP without noticing the change.
+
+---
+
+# Where Does kube-proxy Run?
+
+Every Worker Node has its own kube-proxy.
+
+```text
+                Control Plane
+                     │
+     -------------------------------------
+     │                                   │
++---------------+                 +---------------+
+| Worker Node 1 |                 | Worker Node 2 |
+|---------------|                 |---------------|
+| kubelet       |                 | kubelet       |
+| kube-proxy    |                 | kube-proxy    |
+| Pods          |                 | Pods          |
++---------------+                 +---------------+
+```
+
+Each kube-proxy manages networking for its own node.
+
+---
+
+# Does kube-proxy Create Pods?
+
+❌ No.
+
+Pod creation is handled by:
+
+- API Server
+- Scheduler
+- kubelet
+- Container Runtime
+
+kube-proxy only handles **network communication**.
+
+---
+
+# How Does kube-proxy Forward Traffic?
+
+kube-proxy doesn't forward packets itself like a web server.
+
+Instead, it configures the Linux networking stack using technologies such as:
+
+- **iptables** (most common)
+- **IPVS** (high-performance environments)
+- (Older userspace mode is largely obsolete)
+
+These rules tell the operating system how to route packets to the appropriate Pods.
+
+---
+
+# What Happens If kube-proxy Stops?
+
+Without kube-proxy:
+
+- Existing Pods may continue running.
+- Services cannot correctly route traffic.
+- Internal communication between Services and Pods can fail.
+- Applications become unreachable through Kubernetes Services.
+
+---
+
+# Easy Way to Remember
+
+```text
+API Server
+      │
+      ▼
+Scheduler
+      │
+      ▼
+kubelet
+      │
+      ▼
+Container Runtime
+      │
+      ▼
+Pod Starts
+      │
+      ▼
+kube-proxy
+      │
+      ▼
+Users can access the Pod through a Service
+```
+
+---
+
+# Summary
+
+| Component | Responsibility |
+|-----------|----------------|
+| **kube-proxy** | Manages networking on each Worker Node |
+| **Runs On** | Every Worker Node |
+| **Main Job** | Routes Service traffic to Pods |
+| **Load Balancing** | Yes |
+| **Service Discovery** | Yes |
+| **Creates Pods** | No |
+| **Updates Routing Rules** | Yes |
+
+> **In simple words:** **kube-proxy** is the networking component of Kubernetes. It watches Services and Pods, configures network routing rules, and ensures that requests sent to a Kubernetes Service are automatically forwarded to the correct healthy Pods.
 
