@@ -6,6 +6,10 @@
 - [6) What is role of kube-proxy in Kubernetes?](#6-What-is-role-of-kube-proxy-in-Kubernetes)
 - [7) What are the Different Types of Services in Kubernetes?](#7-What-are-the-Different-Types-of-Services-in-Kubernetes)
 - [8) What is the Difference Between NodePort and LoadBalancer Service?](#8-What-is-the-Difference-Between-NodePort-and-LoadBalancer-Service)
+- [9) What is kubelet in Kubernetes?](#9-What-is-kubelet-in-Kubernetes)
+  - ![kubelet](https://res.cloudinary.com/doboojtkz/image/upload/v1783489256/Screenshot_2026-07-08_110739_gtsyg8.png)
+
+  
 
 # 1) What is the Difference Between Docker and Kubernetes?
 Docker and Kubernetes are often used together, but **they solve different problems**.
@@ -2862,4 +2866,393 @@ This is why you'll often see a NodePort assigned even when using a LoadBalancer 
 | Simple and inexpensive | More scalable and user-friendly |
 
 > **In simple words:** **NodePort** exposes your application by opening a port on every Kubernetes node, while **LoadBalancer** provides a single external IP or DNS and automatically routes traffic to your application, making it the preferred choice for production deployments.
+
+-----
+
+# 9) What is kubelet in Kubernetes?
+
+**kubelet** is the **primary node agent** that runs on **every Worker Node** in a Kubernetes cluster. Its job is to ensure that the Pods assigned to that node are running correctly.
+
+> **kubelet = Node Agent of Kubernetes**
+
+It acts as a bridge between the **Control Plane** and the **Worker Node**.
+
+---
+
+# Why Do We Need kubelet?
+
+The Control Plane decides:
+
+- Which Pods should run
+- Where they should run
+
+But the Control Plane **cannot directly create or manage containers** on a Worker Node.
+
+That's where **kubelet** comes in.
+
+It receives instructions from the API Server and makes sure the required Pods are running on its node.
+
+---
+
+# Real-Life Analogy
+
+Imagine a construction company.
+
+```text
+Project Manager
+
+↓
+
+Site Supervisor
+
+↓
+
+Workers
+```
+
+- **Project Manager** = Control Plane
+- **Site Supervisor** = kubelet
+- **Workers** = Containers
+
+The project manager decides **what to build**, while the site supervisor ensures the workers actually build it.
+
+---
+
+# Where Does kubelet Run?
+
+Every Worker Node runs one kubelet process.
+
+```text
+                 Control Plane
+                      │
+          -------------------------
+          │                       │
++----------------+       +----------------+
+| Worker Node 1  |       | Worker Node 2  |
+|----------------|       |----------------|
+| kubelet        |       | kubelet        |
+| kube-proxy     |       | kube-proxy     |
+| Container RT   |       | Container RT   |
+| Pods           |       | Pods           |
++----------------+       +----------------+
+```
+
+---
+
+# How kubelet Works
+
+Suppose you run:
+
+```bash
+kubectl apply -f deployment.yaml
+```
+
+The flow is:
+
+```text
+kubectl
+
+↓
+
+API Server
+
+↓
+
+Scheduler chooses Worker Node
+
+↓
+
+kubelet receives Pod specification
+
+↓
+
+Container Runtime pulls image
+
+↓
+
+Container starts
+
+↓
+
+kubelet monitors the Pod
+```
+
+---
+
+# Main Responsibilities of kubelet
+
+## 1. Registers the Node
+
+When kubelet starts, it registers its Worker Node with the Kubernetes cluster.
+
+```text
+Worker Node
+
+↓
+
+kubelet
+
+↓
+
+API Server
+
+↓
+
+Node appears in the cluster
+```
+
+You can verify this with:
+
+```bash
+kubectl get nodes
+```
+
+---
+
+## 2. Receives Pod Specifications
+
+After the Scheduler assigns a Pod to a node:
+
+```text
+Scheduler
+
+↓
+
+Worker Node 2
+```
+
+The API Server stores this assignment.
+
+kubelet continuously watches the API Server and notices:
+
+> "A new Pod has been assigned to my node."
+
+It then starts creating the Pod.
+
+---
+
+## 3. Talks to the Container Runtime
+
+kubelet **does not run containers itself**.
+
+Instead, it communicates with the **Container Runtime** (such as **containerd** or **CRI-O**) using the **Container Runtime Interface (CRI)**.
+
+Example:
+
+```text
+kubelet
+
+↓
+
+containerd
+
+↓
+
+Create Container
+
+↓
+
+Run Container
+```
+
+---
+
+## 4. Monitors Pod Health
+
+kubelet continuously checks whether Pods are healthy.
+
+```text
+Running Pod
+
+↓
+
+Health Check
+
+↓
+
+Healthy ✅
+```
+
+or
+
+```text
+Running Pod
+
+↓
+
+Health Check
+
+↓
+
+Unhealthy ❌
+```
+
+If a container crashes and its restart policy allows it, kubelet asks the container runtime to restart it.
+
+---
+
+## 5. Reports Node Status
+
+kubelet periodically sends status information to the API Server.
+
+Information includes:
+
+- Node health
+- CPU usage
+- Memory usage
+- Running Pods
+- Pod status
+
+Example:
+
+```text
+kubelet
+
+↓
+
+API Server
+
+↓
+
+Node is Ready
+```
+
+---
+
+## 6. Executes Liveness and Readiness Probes
+
+Applications may define health checks.
+
+Example:
+
+```yaml
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+```
+
+kubelet performs these checks.
+
+If the liveness probe fails:
+
+```text
+Health Check Failed
+
+↓
+
+kubelet
+
+↓
+
+Restart Container
+```
+
+If the readiness probe fails:
+
+```text
+Health Check Failed
+
+↓
+
+Pod marked Not Ready
+
+↓
+
+Service stops sending traffic
+```
+
+---
+
+# What kubelet Does NOT Do
+
+❌ It does **not** decide **which node** should run a Pod.
+- That is the **Scheduler's** job.
+
+❌ It does **not** expose applications to users.
+- That is handled by **Services** and **kube-proxy**.
+
+❌ It does **not** store cluster data.
+- That is the role of **etcd**.
+
+---
+
+# kubelet vs kube-proxy
+
+| kubelet | kube-proxy |
+|----------|------------|
+| Runs Pods | Routes network traffic |
+| Talks to the Container Runtime | Configures network rules |
+| Monitors Pod health | Implements Service networking |
+| Registers the node | Runs on every Worker Node |
+| Executes health probes | Load balances traffic to Pods |
+
+---
+
+# Complete Workflow
+
+```text
+User
+
+↓
+
+kubectl apply
+
+↓
+
+API Server
+
+↓
+
+Scheduler selects Node
+
+↓
+
+kubelet
+
+↓
+
+Container Runtime
+
+↓
+
+Pod Starts
+
+↓
+
+kubelet monitors Pod
+
+↓
+
+API Server receives status
+```
+
+---
+
+# Easy Way to Remember
+
+Think of the Worker Node as a factory.
+
+- **Scheduler** → Chooses which factory gets the job.
+- **kubelet** → Factory supervisor who ensures the work is done.
+- **Container Runtime** → Machines that manufacture the product (containers).
+- **kube-proxy** → Delivery manager that routes traffic to the finished product.
+
+---
+
+# Summary
+
+| Responsibility | kubelet |
+|---------------|----------|
+| Runs on | Every Worker Node |
+| Registers Node | ✅ |
+| Watches API Server | ✅ |
+| Starts Pods | ✅ (through the Container Runtime) |
+| Monitors Pod Health | ✅ |
+| Reports Status | ✅ |
+| Executes Health Probes | ✅ |
+| Routes Network Traffic | ❌ |
+| Chooses Worker Node | ❌ |
+
+> **In simple words:** **kubelet** is the **node agent** of Kubernetes. It receives Pod instructions from the Control Plane, works with the container runtime to start and stop containers, continuously monitors their health, and reports the node and Pod status back to the API Server.
 
