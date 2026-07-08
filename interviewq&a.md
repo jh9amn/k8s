@@ -4,7 +4,7 @@
 - [4) What is the difference between Docker container and a Kubernetes pod?](#4-What-is-the-difference-between-Docker-container-and-a-Kubernetes-pod)
 - [5) What is a Namespace in Kubernetes?](#5-What-is-a-Namespace-in-Kubernetes)
 - [6) What is role of kube-proxy in Kubernetes?](#6-What-is-role-of-kube-proxy-in-Kubernetes)
-- [7) # What are the Different Types of Services in Kubernetes?](#7-What-are-the-Different-Types-of-Services-in-Kubernetes)
+- [7) What are the Different Types of Services in Kubernetes?](#7-What-are-the-Different-Types-of-Services-in-Kubernetes)
 
 # 1) What is the Difference Between Docker and Kubernetes?
 Docker and Kubernetes are often used together, but **they solve different problems**.
