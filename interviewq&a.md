@@ -4,6 +4,7 @@
 - [4) What is the difference between Docker container and a Kubernetes pod?](#4-What-is-the-difference-between-Docker-container-and-a-Kubernetes-pod)
 - [5) What is a Namespace in Kubernetes?](#5-What-is-a-Namespace-in-Kubernetes)
 - [6) What is role of kube-proxy in Kubernetes?](#6-What-is-role-of-kube-proxy-in-Kubernetes)
+- [7) # What are the Different Types of Services in Kubernetes?](#7-What-are-the-Different-Types-of-Services-in-Kubernetes)
 
 # 1) What is the Difference Between Docker and Kubernetes?
 Docker and Kubernetes are often used together, but **they solve different problems**.
@@ -2083,4 +2084,443 @@ Users can access the Pod through a Service
 | **Updates Routing Rules** | Yes |
 
 > **In simple words:** **kube-proxy** is the networking component of Kubernetes. It watches Services and Pods, configures network routing rules, and ensures that requests sent to a Kubernetes Service are automatically forwarded to the correct healthy Pods.
+
+----
+
+
+# 7) What are the Different Types of Services in Kubernetes?
+
+A **Service** in Kubernetes is an abstraction that provides a **stable network endpoint** for a group of Pods. Since Pods are temporary and their IP addresses can change, a Service ensures applications can always reach the correct Pods.
+
+> **Service = Stable endpoint to access one or more Pods**
+
+---
+
+# Why Do We Need Services?
+
+Imagine you have a Deployment with three Pods.
+
+```text
+Frontend Deployment
+
+├── Pod 1 (10.244.1.2)
+├── Pod 2 (10.244.1.3)
+└── Pod 3 (10.244.1.4)
+```
+
+If **Pod 2** crashes:
+
+```text
+Pod 2 ❌
+
+↓
+
+New Pod
+
+↓
+
+IP becomes 10.244.1.10
+```
+
+The Pod IP changes.
+
+Instead of remembering Pod IPs, users communicate through a **Service**, whose IP remains the same.
+
+```text
+User
+
+↓
+
+Service (Stable IP)
+
+↓
+
+Pod 1
+Pod 2
+Pod 3
+```
+
+---
+
+# Types of Kubernetes Services
+
+There are **4 main types of Services**:
+
+1. **ClusterIP (Default)**
+2. **NodePort**
+3. **LoadBalancer**
+4. **ExternalName**
+
+---
+
+# 1. ClusterIP (Default)
+
+A **ClusterIP** Service exposes an application **only inside the Kubernetes cluster**.
+
+It **cannot** be accessed directly from outside the cluster.
+
+### Architecture
+
+```text
+Pod A
+Pod B
+Pod C
+   ▲
+   │
+ClusterIP Service
+   ▲
+   │
+Another Pod
+```
+
+Only internal Pods can access the Service.
+
+---
+
+### Use Cases
+
+- Backend APIs
+- Databases
+- Internal microservices
+- Redis
+- MongoDB
+
+---
+
+### Example
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  type: ClusterIP
+  selector:
+    app: backend
+  ports:
+    - port: 80
+      targetPort: 8080
+```
+
+---
+
+### Access
+
+```text
+Inside Cluster  ✅
+
+Outside Cluster ❌
+```
+
+---
+
+# 2. NodePort
+
+A **NodePort** Service exposes an application on a **specific port of every Worker Node**.
+
+You can access the application using:
+
+```text
+<Node-IP>:<NodePort>
+```
+
+The default NodePort range is:
+
+```text
+30000 - 32767
+```
+
+---
+
+### Architecture
+
+```text
+Internet
+    │
+    ▼
+Node IP:30080
+    │
+    ▼
+NodePort Service
+    │
+    ▼
+Pod 1
+Pod 2
+Pod 3
+```
+
+---
+
+### Example
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+spec:
+  type: NodePort
+  selector:
+    app: frontend
+  ports:
+    - port: 80
+      targetPort: 8080
+      nodePort: 30080
+```
+
+---
+
+### Access
+
+```text
+http://192.168.49.2:30080
+```
+
+(Replace `192.168.49.2` with your node's IP.)
+
+---
+
+### Use Cases
+
+- Development
+- Testing
+- Learning Kubernetes
+- Minikube
+
+---
+
+# 3. LoadBalancer
+
+A **LoadBalancer** Service exposes an application to the internet using a **cloud provider's load balancer**.
+
+It automatically creates an external IP address.
+
+---
+
+### Architecture
+
+```text
+Internet
+    │
+    ▼
+Cloud Load Balancer
+    │
+    ▼
+Service
+    │
+    ▼
+Pod 1
+Pod 2
+Pod 3
+```
+
+---
+
+### Example
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: web
+  ports:
+    - port: 80
+      targetPort: 8080
+```
+
+---
+
+### Access
+
+```text
+http://35.201.xxx.xxx
+```
+
+The cloud provider assigns the external IP.
+
+---
+
+### Supported Cloud Platforms
+
+- AWS
+- Azure
+- Google Cloud
+- DigitalOcean
+
+---
+
+### Use Cases
+
+- Production applications
+- Public APIs
+- Websites
+- Mobile backends
+
+---
+
+# 4. ExternalName
+
+An **ExternalName** Service does **not** create Pods or forward traffic.
+
+Instead, it maps a Kubernetes Service name to an external DNS name.
+
+---
+
+### Example
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-db
+spec:
+  type: ExternalName
+  externalName: database.example.com
+```
+
+---
+
+### Architecture
+
+```text
+Application
+
+↓
+
+ExternalName Service
+
+↓
+
+database.example.com
+```
+
+Kubernetes simply returns the external DNS name.
+
+---
+
+### Use Cases
+
+- External databases
+- Third-party APIs
+- Legacy systems
+
+---
+
+# Comparison Diagram
+
+```text
+                    Services
+
+          +----------------------+
+          |      ClusterIP       |
+          +----------------------+
+                    │
+          Internal Communication
+
+---------------------------------------------
+
+Internet
+   │
+   ▼
++----------------------+
+|      NodePort        |
++----------------------+
+          │
+      Worker Node
+
+---------------------------------------------
+
+Internet
+   │
+   ▼
+Cloud Load Balancer
+   │
+   ▼
++----------------------+
+|    LoadBalancer      |
++----------------------+
+
+---------------------------------------------
+
+Application
+   │
+   ▼
++----------------------+
+|    ExternalName      |
++----------------------+
+          │
+External Website / Database
+```
+
+---
+
+# Comparison Table
+
+| Feature | ClusterIP | NodePort | LoadBalancer | ExternalName |
+|---------|-----------|-----------|--------------|--------------|
+| Default Type | ✅ | ❌ | ❌ | ❌ |
+| Internal Access | ✅ | ✅ | ✅ | ✅ |
+| External Access | ❌ | ✅ | ✅ | Depends on external DNS |
+| Creates Cluster IP | ✅ | ✅ | ✅ | ❌ |
+| Uses Node Port | ❌ | ✅ | Usually yes (internally) | ❌ |
+| Cloud Load Balancer | ❌ | ❌ | ✅ | ❌ |
+| Best For | Internal services | Development & testing | Production | External services |
+
+---
+
+# Which Service Should You Use?
+
+| Scenario | Recommended Service |
+|----------|---------------------|
+| Backend API | ClusterIP |
+| Database | ClusterIP |
+| Redis | ClusterIP |
+| Minikube testing | NodePort |
+| Local development | NodePort |
+| Production website | LoadBalancer |
+| Public REST API | LoadBalancer |
+| External database | ExternalName |
+
+---
+
+# Easy Way to Remember
+
+- **ClusterIP** → Inside the cluster only.
+- **NodePort** → Accessible using `<Node-IP>:Port`.
+- **LoadBalancer** → Public internet access through a cloud load balancer.
+- **ExternalName** → Maps a Kubernetes Service to an external DNS name.
+
+---
+
+# Interview Tip
+
+A common interview question is:
+
+**Q:** Which Service type is used most frequently?
+
+**Answer:**
+
+- **ClusterIP** is the **default** and most commonly used Service type because most microservices communicate **internally** within the Kubernetes cluster.
+- **LoadBalancer** is commonly used to expose public-facing applications in production.
+- **NodePort** is mainly used for learning, testing, and small deployments.
+- **ExternalName** is used when an application needs to access an external service using a Kubernetes Service name.
+
+---
+
+# Summary
+
+| Service Type | Accessible From | Typical Use |
+|--------------|-----------------|-------------|
+| **ClusterIP** | Inside the cluster only | Internal microservices and databases |
+| **NodePort** | `<Node-IP>:NodePort` | Development and testing |
+| **LoadBalancer** | Internet via cloud load balancer | Production web applications |
+| **ExternalName** | External DNS name | External databases and third-party services |
+
+> **In simple words:** Kubernetes Services provide a **stable way to access Pods**. Choose **ClusterIP** for internal communication, **NodePort** for basic external access, **LoadBalancer** for production internet-facing applications, and **ExternalName** to connect to external services.
+
 
