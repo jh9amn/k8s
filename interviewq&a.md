@@ -7,6 +7,7 @@
 - [7) What are the Different Types of Services in Kubernetes?](#7-What-are-the-Different-Types-of-Services-in-Kubernetes)
 - [8) What is the Difference Between NodePort and LoadBalancer Service?](#8-What-is-the-Difference-Between-NodePort-and-LoadBalancer-Service)
 - [9) What is kubelet in Kubernetes?](#9-What-is-kubelet-in-Kubernetes)
+- [10) Day-to-Day Activities on a Kubernetes Cluster](#10-Day-to-Day-Activities-on-a-Kubernetes-Cluster)
 
   
 
@@ -3256,4 +3257,409 @@ Think of the Worker Node as a factory.
 | Chooses Worker Node | ❌ |
 
 > **In simple words:** **kubelet** is the **node agent** of Kubernetes. It receives Pod instructions from the Control Plane, works with the container runtime to start and stop containers, continuously monitors their health, and reports the node and Pod status back to the API Server.
+
+
+----
+
+# 10) Day-to-Day Activities on a Kubernetes Cluster
+
+As a **Kubernetes Administrator**, **DevOps Engineer**, or **Platform Engineer**, you'll perform various tasks to deploy, monitor, troubleshoot, and maintain applications running in a Kubernetes cluster.
+
+---
+
+# 1. Check Cluster Health
+
+Verify that the cluster and all nodes are healthy.
+
+```bash
+kubectl cluster-info
+kubectl get nodes
+kubectl describe node <node-name>
+```
+
+Example Output:
+
+```text
+NAME       STATUS   ROLES           AGE
+master     Ready    control-plane   15d
+worker-1   Ready    <none>          15d
+worker-2   Ready    <none>          15d
+```
+
+---
+
+# 2. Check Pods
+
+View all running Pods.
+
+```bash
+kubectl get pods
+```
+
+View Pods in all namespaces.
+
+```bash
+kubectl get pods -A
+```
+
+Get detailed Pod information.
+
+```bash
+kubectl describe pod <pod-name>
+```
+
+---
+
+# 3. View Logs
+
+Check application logs.
+
+```bash
+kubectl logs <pod-name>
+```
+
+Follow logs in real time.
+
+```bash
+kubectl logs -f <pod-name>
+```
+
+Logs of a specific container.
+
+```bash
+kubectl logs <pod-name> -c <container-name>
+```
+
+---
+
+# 4. Deploy Applications
+
+Deploy a new application.
+
+```bash
+kubectl apply -f deployment.yaml
+```
+
+Verify deployment.
+
+```bash
+kubectl get deployments
+```
+
+---
+
+# 5. Scale Applications
+
+Increase replicas.
+
+```bash
+kubectl scale deployment nginx --replicas=5
+```
+
+Verify.
+
+```bash
+kubectl get deployment
+```
+
+---
+
+# 6. Perform Rolling Updates
+
+Update application image.
+
+```bash
+kubectl set image deployment/nginx nginx=nginx:1.28
+```
+
+Check rollout.
+
+```bash
+kubectl rollout status deployment/nginx
+```
+
+Rollback if needed.
+
+```bash
+kubectl rollout undo deployment/nginx
+```
+
+---
+
+# 7. Monitor Resource Usage
+
+View CPU and memory usage.
+
+```bash
+kubectl top nodes
+kubectl top pods
+```
+
+Requires the **Metrics Server** to be installed.
+
+---
+
+# 8. Troubleshoot Issues
+
+Describe resources.
+
+```bash
+kubectl describe pod <pod-name>
+```
+
+Check events.
+
+```bash
+kubectl get events
+```
+
+Execute commands inside a Pod.
+
+```bash
+kubectl exec -it <pod-name> -- /bin/bash
+```
+
+---
+
+# 9. Manage Services
+
+View Services.
+
+```bash
+kubectl get svc
+```
+
+Describe a Service.
+
+```bash
+kubectl describe svc <service-name>
+```
+
+---
+
+# 10. Manage Namespaces
+
+List namespaces.
+
+```bash
+kubectl get namespaces
+```
+
+Create a namespace.
+
+```bash
+kubectl create namespace dev
+```
+
+---
+
+# 11. Manage ConfigMaps and Secrets
+
+View ConfigMaps.
+
+```bash
+kubectl get configmaps
+```
+
+View Secrets.
+
+```bash
+kubectl get secrets
+```
+
+---
+
+# 12. Check Deployments
+
+```bash
+kubectl get deployments
+kubectl describe deployment <deployment-name>
+```
+
+---
+
+# 13. Delete Unused Resources
+
+Delete a Pod.
+
+```bash
+kubectl delete pod <pod-name>
+```
+
+Delete a Deployment.
+
+```bash
+kubectl delete deployment <deployment-name>
+```
+
+---
+
+# 14. Check Cluster Events
+
+```bash
+kubectl get events --sort-by=.metadata.creationTimestamp
+```
+
+Useful for identifying scheduling failures, image pull errors, and other issues.
+
+---
+
+# 15. Backup Important Resources
+
+Export resource definitions.
+
+```bash
+kubectl get deployment nginx -o yaml > deployment-backup.yaml
+```
+
+Back up `etcd` regularly in production clusters.
+
+---
+
+# 16. Verify Networking
+
+Check Services.
+
+```bash
+kubectl get svc
+```
+
+Test connectivity.
+
+```bash
+kubectl exec -it <pod-name> -- curl http://service-name
+```
+
+---
+
+# 17. Monitor Node Status
+
+```bash
+kubectl get nodes
+kubectl describe node <node-name>
+```
+
+Look for:
+
+- CPU pressure
+- Memory pressure
+- Disk pressure
+- Node readiness
+
+---
+
+# 18. Resource Cleanup
+
+Remove completed Jobs or unused resources.
+
+```bash
+kubectl delete job <job-name>
+kubectl delete pod <pod-name>
+```
+
+---
+
+# Daily Kubernetes Workflow
+
+```text
+Start Day
+    │
+    ▼
+Check Cluster Health
+    │
+    ▼
+Check Nodes
+    │
+    ▼
+Check Pods
+    │
+    ▼
+Review Logs
+    │
+    ▼
+Deploy / Update Applications
+    │
+    ▼
+Scale if Required
+    │
+    ▼
+Monitor CPU & Memory
+    │
+    ▼
+Troubleshoot Issues
+    │
+    ▼
+Verify Services
+    │
+    ▼
+Review Events
+    │
+    ▼
+End of Day
+```
+
+---
+
+# Common kubectl Commands
+
+| Task | Command |
+|------|---------|
+| View nodes | `kubectl get nodes` |
+| View Pods | `kubectl get pods` |
+| View all Pods | `kubectl get pods -A` |
+| Describe Pod | `kubectl describe pod <pod>` |
+| View logs | `kubectl logs <pod>` |
+| Execute inside Pod | `kubectl exec -it <pod> -- /bin/bash` |
+| Deploy application | `kubectl apply -f deployment.yaml` |
+| Delete resource | `kubectl delete -f deployment.yaml` |
+| Scale Deployment | `kubectl scale deployment app --replicas=5` |
+| Check Services | `kubectl get svc` |
+| Check Namespaces | `kubectl get ns` |
+| Monitor resources | `kubectl top nodes` |
+
+---
+
+# Real-World Daily Scenario
+
+Imagine you're responsible for an e-commerce application.
+
+### Morning
+
+- Check if all worker nodes are **Ready**.
+- Verify all Pods are running.
+- Review overnight alerts and logs.
+
+### During the Day
+
+- Deploy a new version of the frontend.
+- Scale the backend from 3 to 6 replicas due to increased traffic.
+- Investigate a Pod stuck in `CrashLoopBackOff`.
+- Check CPU and memory usage.
+- Restart a Deployment if required.
+
+### Evening
+
+- Confirm all Services are healthy.
+- Verify the rollout completed successfully.
+- Review cluster events.
+- Back up critical configuration if needed.
+
+---
+
+# Interview Tip
+
+When asked **"What are your day-to-day activities in Kubernetes?"**, you can answer:
+
+> - Monitor cluster and node health.
+> - Check Pod status and application logs.
+> - Deploy and update applications using Deployments.
+> - Scale applications based on traffic.
+> - Troubleshoot failed Pods and networking issues.
+> - Manage Services, ConfigMaps, Secrets, and Namespaces.
+> - Monitor CPU and memory usage.
+> - Perform rolling updates and rollbacks.
+> - Review cluster events and ensure applications remain healthy.
+> - Maintain cluster reliability through regular monitoring and cleanup.
+
+This answer covers the key operational responsibilities expected in most Kubernetes administration and DevOps roles.
 
