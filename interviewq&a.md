@@ -7,7 +7,6 @@
 - [7) What are the Different Types of Services in Kubernetes?](#7-What-are-the-Different-Types-of-Services-in-Kubernetes)
 - [8) What is the Difference Between NodePort and LoadBalancer Service?](#8-What-is-the-Difference-Between-NodePort-and-LoadBalancer-Service)
 - [9) What is kubelet in Kubernetes?](#9-What-is-kubelet-in-Kubernetes)
-  - ![kubelet](https://res.cloudinary.com/doboojtkz/image/upload/v1783489256/Screenshot_2026-07-08_110739_gtsyg8.png)
 
   
 
@@ -2870,6 +2869,8 @@ This is why you'll often see a NodePort assigned even when using a LoadBalancer 
 -----
 
 # 9) What is kubelet in Kubernetes?
+
+![kubelet](https://res.cloudinary.com/doboojtkz/image/upload/v1783489256/Screenshot_2026-07-08_110739_gtsyg8.png)
 
 **kubelet** is the **primary node agent** that runs on **every Worker Node** in a Kubernetes cluster. Its job is to ensure that the Pods assigned to that node are running correctly.
 
