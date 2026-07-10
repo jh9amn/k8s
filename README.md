@@ -25,7 +25,7 @@
     - [ExternalName](#externalname)
   - [Example YAML](#example-yaml)
   - [Services summary](#services-summary)
-
+- [What is Ingress in Kubernetes?](#What-is-Ingress-in-Kubernetes)
 
 ## Introduction
 
@@ -2000,6 +2000,501 @@ It provides:
 
 Without a Service, clients would need to know the changing IP addresses of Pods. With a Service, they only need to know the Service name or IP, while Kubernetes handles routing to the appropriate Pods automatically.
 
+
+----
+
+
+# What is Ingress in Kubernetes?
+
+An **Ingress** is a Kubernetes API object that manages **external HTTP and HTTPS traffic** to services inside a Kubernetes cluster.
+
+Instead of exposing every application using a separate **NodePort** or **LoadBalancer**, an Ingress lets you expose **multiple services through a single entry point**.
+
+> **Ingress = Smart traffic router for HTTP/HTTPS requests**
+
+---
+
+# Why Do We Need Ingress?
+
+Imagine you have three applications running in your cluster:
+
+- Frontend
+- Backend API
+- Admin Panel
+
+Without Ingress, you might create three separate LoadBalancer Services.
+
+```text
+Internet
+
+ ├── LoadBalancer 1 → Frontend
+ ├── LoadBalancer 2 → Backend
+ └── LoadBalancer 3 → Admin
+```
+
+Problems:
+
+- More cloud resources
+- Higher cost
+- Multiple public IP addresses
+- Difficult to manage
+
+---
+
+With Ingress:
+
+```text
+Internet
+      │
+      ▼
++----------------------+
+|   Ingress Controller |
++----------------------+
+      │
+ ┌────┴─────┐
+ │          │
+ ▼          ▼
+Frontend   Backend
+            │
+            ▼
+         Admin
+```
+
+Only **one public IP** is needed, and the Ingress routes traffic to the correct Service.
+
+---
+
+# Real-Life Analogy
+
+Imagine a large office building.
+
+```text
+Visitor
+
+↓
+
+Reception Desk
+
+↓
+
+HR Department
+
+↓
+
+Finance Department
+
+↓
+
+Engineering Department
+```
+
+- Visitor = User Request
+- Reception = Ingress
+- Departments = Kubernetes Services
+
+The receptionist decides where each visitor should go.
+
+Similarly, Ingress routes incoming requests to the appropriate Service.
+
+---
+
+# How Ingress Works
+
+```text
+User
+
+↓
+
+Ingress
+
+↓
+
+Service
+
+↓
+
+Pod
+```
+
+Example:
+
+```text
+https://example.com
+
+↓
+
+Ingress
+
+↓
+
+Frontend Service
+
+↓
+
+Frontend Pods
+```
+
+---
+
+# Path-Based Routing
+
+Ingress can route traffic based on the URL path.
+
+Example:
+
+```text
+example.com/
+
+↓
+
+Frontend
+```
+
+```text
+example.com/api
+
+↓
+
+Backend API
+```
+
+Architecture:
+
+```text
+Internet
+
+↓
+
+Ingress
+
+├── /      → Frontend Service
+├── /api   → Backend Service
+└── /admin → Admin Service
+```
+
+---
+
+# Host-Based Routing
+
+Ingress can also route traffic based on the hostname.
+
+Example:
+
+```text
+shop.example.com
+
+↓
+
+Shopping Service
+```
+
+```text
+blog.example.com
+
+↓
+
+Blog Service
+```
+
+Architecture:
+
+```text
+Internet
+
+↓
+
+Ingress
+
+├── shop.example.com
+│      │
+│      ▼
+│   Shop Service
+│
+└── blog.example.com
+       │
+       ▼
+   Blog Service
+```
+
+---
+
+# Example Ingress YAML
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+spec:
+  rules:
+  - host: myapp.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-service
+            port:
+              number: 80
+```
+
+This means:
+
+```text
+myapp.com
+
+↓
+
+Frontend Service
+
+↓
+
+Frontend Pods
+```
+
+---
+
+# What is an Ingress Controller?
+
+An **Ingress resource** only defines the routing rules.
+
+The **Ingress Controller** is the software that reads those rules and actually routes the traffic.
+
+Without an Ingress Controller, creating an Ingress resource has **no effect**.
+
+Popular Ingress Controllers:
+
+- NGINX Ingress Controller
+- HAProxy Ingress Controller
+- Traefik
+- Kong
+- AWS Load Balancer Controller
+
+---
+
+# Complete Request Flow
+
+```text
+User
+
+↓
+
+DNS
+
+↓
+
+Ingress Controller
+
+↓
+
+Ingress Rules
+
+↓
+
+Service
+
+↓
+
+Pod
+```
+
+---
+
+# Features of Ingress
+
+### 1. Path-Based Routing
+
+```text
+/app
+
+↓
+
+App Service
+```
+
+---
+
+### 2. Host-Based Routing
+
+```text
+api.example.com
+
+↓
+
+API Service
+```
+
+---
+
+### 3. SSL/TLS Termination
+
+Ingress can terminate HTTPS connections.
+
+```text
+HTTPS
+
+↓
+
+Ingress
+
+↓
+
+HTTP
+
+↓
+
+Pods
+```
+
+This allows you to manage SSL certificates in one place.
+
+---
+
+### 4. Load Balancing
+
+Ingress distributes requests among multiple Pods.
+
+```text
+Ingress
+
+↓
+
+Pod 1
+
+Pod 2
+
+Pod 3
+```
+
+---
+
+### 5. URL Rewriting
+
+Example:
+
+```text
+/api/users
+
+↓
+
+/users
+```
+
+Useful when backend applications expect different URL structures.
+
+---
+
+# Ingress vs Service
+
+| Feature | Service | Ingress |
+|---------|----------|----------|
+| Purpose | Exposes Pods | Routes external HTTP/HTTPS traffic |
+| Layer | Network (Layer 4 - TCP/UDP) | Application (Layer 7 - HTTP/HTTPS) |
+| Supports Path Routing | ❌ | ✅ |
+| Supports Host Routing | ❌ | ✅ |
+| SSL/TLS Termination | ❌ | ✅ |
+| Requires Ingress Controller | ❌ | ✅ |
+
+---
+
+# Service vs Ingress Architecture
+
+Without Ingress:
+
+```text
+Internet
+
+├── LoadBalancer → Frontend
+├── LoadBalancer → Backend
+└── LoadBalancer → Admin
+```
+
+With Ingress:
+
+```text
+Internet
+
+↓
+
+LoadBalancer
+
+↓
+
+Ingress Controller
+
+↓
+
+Ingress Rules
+
+├── Frontend Service
+├── Backend Service
+└── Admin Service
+```
+
+---
+
+# When Should You Use Ingress?
+
+Use Ingress when:
+
+- Hosting multiple applications.
+- Using one domain for multiple services.
+- You need path-based routing.
+- You need host-based routing.
+- You want HTTPS termination.
+- You want to reduce the number of cloud load balancers.
+
+---
+
+# Easy Way to Remember
+
+- **Service** = Connects users to a specific set of Pods.
+- **Ingress** = Decides **which Service** should receive an incoming HTTP/HTTPS request.
+- **Ingress Controller** = The software that enforces the Ingress rules.
+
+Think of it like this:
+
+```text
+Internet
+
+↓
+
+Ingress (Traffic Manager)
+
+↓
+
+Service (Reception Desk)
+
+↓
+
+Pods (Employees)
+```
+
+---
+
+# Interview Tip
+
+A common interview question is:
+
+**Q:** Can Ingress expose Pods directly?
+
+**Answer:**
+
+**No.** An Ingress always routes traffic to a **Service**, and the Service forwards it to the appropriate Pods.
+
+---
+
+# Summary
+
+| Component | Responsibility |
+|-----------|----------------|
+| **Ingress** | Defines HTTP/HTTPS routing rules |
+| **Ingress Controller** | Implements the routing rules |
+| **Service** | Provides a stable endpoint for Pods |
+| **Pod** | Runs the application |
+
+> **In simple words:** An **Ingress** is a smart HTTP/HTTPS router for Kubernetes. It allows multiple applications to share a single external IP address and routes requests to the correct Service based on the request's host or URL path.
 
 
 
