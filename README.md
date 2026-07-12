@@ -26,6 +26,7 @@
   - [Example YAML](#example-yaml)
   - [Services summary](#services-summary)
 - [What is Ingress in Kubernetes?](#What-is-Ingress-in-Kubernetes)
+- [configMap in Kubernetes](#configMap-in-Kubernetes)
 
 ## Introduction
 
@@ -2496,5 +2497,341 @@ A common interview question is:
 
 > **In simple words:** An **Ingress** is a smart HTTP/HTTPS router for Kubernetes. It allows multiple applications to share a single external IP address and routes requests to the correct Service based on the request's host or URL path.
 
+-----
+
+# configMap in Kubernetes
+
+A **ConfigMap** in Kubernetes is an object used to **store non-sensitive configuration data** separately from your application code and container image.
+
+Think of it like this:
+
+> **ConfigMap = External configuration for your application**
+
+Instead of hardcoding values like database host, port, or environment into your application, you keep them in a ConfigMap so you can change configuration without rebuilding the Docker image.
+
+---
+
+# Why do we need ConfigMaps?
+
+Imagine your Python application has:
+
+```python
+DB_HOST = "localhost"
+DB_PORT = "5432"
+```
+
+If tomorrow the database moves to another server, you'd have to:
+
+1. Modify the code
+2. Rebuild the Docker image
+3. Push the image
+4. Redeploy
+
+This is inefficient.
+
+Instead, store these values in a ConfigMap.
+
+```
+Application
+     │
+     ▼
+Reads configuration
+     │
+     ▼
+ConfigMap
+```
+
+Now you only update the ConfigMap and restart the Pod if necessary.
+
+---
+
+# Example ConfigMap
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: test-cm
+
+data:
+  db-host: mysql-service
+  db-port: "3306"
+  app-mode: production
+```
+
+Create it:
+
+```bash
+kubectl apply -f configmap.yaml
+```
+
+Check it:
+
+```bash
+kubectl get configmap
+```
+
+Describe it:
+
+```bash
+kubectl describe configmap test-cm
+```
+
+Output:
+
+```
+Name: test-cm
+
+Data
+====
+db-host:
+----
+mysql-service
+
+db-port:
+----
+3306
+
+app-mode:
+----
+production
+```
+
+---
+
+# Ways to use a ConfigMap
+
+There are three common ways.
+
+## 1. As Environment Variables (Most Common)
+
+### ConfigMap
+
+```yaml
+data:
+  db-host: mysql
+  db-port: "3306"
+```
+
+Deployment:
+
+```yaml
+containers:
+- name: python-app
+  image: myapp:v1
+
+  env:
+    - name: DB_HOST
+      valueFrom:
+        configMapKeyRef:
+          name: test-cm
+          key: db-host
+
+    - name: DB_PORT
+      valueFrom:
+        configMapKeyRef:
+          name: test-cm
+          key: db-port
+```
+
+Notice the important field:
+
+```yaml
+configMapKeyRef
+```
+
+**Not**
+
+```yaml
+configMapRef
+```
+
+This is exactly the issue you encountered earlier.
+
+Inside the container:
+
+```
+DB_HOST=mysql
+
+DB_PORT=3306
+```
+
+Python:
+
+```python
+import os
+
+host = os.getenv("DB_HOST")
+port = os.getenv("DB_PORT")
+```
+
+---
+
+## 2. Import the Entire ConfigMap
+
+Instead of specifying each key individually:
+
+```yaml
+envFrom:
+  - configMapRef:
+      name: test-cm
+```
+
+If ConfigMap contains:
+
+```yaml
+data:
+  DB_HOST: mysql
+  DB_PORT: "3306"
+```
+
+Then both variables become available automatically:
+
+```
+DB_HOST=mysql
+
+DB_PORT=3306
+```
+
+---
+
+## 3. Mount as a Volume
+
+Kubernetes can create files from ConfigMap entries.
+
+```yaml
+volumes:
+- name: config-volume
+  configMap:
+    name: test-cm
+
+containers:
+- volumeMounts:
+  - mountPath: /etc/config
+    name: config-volume
+```
+
+Inside the Pod:
+
+```
+/etc/config/
+    db-host
+    db-port
+```
+
+Each key becomes a file.
+
+Example:
+
+```
+cat /etc/config/db-port
+```
+
+Output:
+
+```
+3306
+```
+
+---
+
+# Create a ConfigMap from the command line
+
+Instead of writing YAML:
+
+```bash
+kubectl create configmap test-cm \
+  --from-literal=db-host=mysql \
+  --from-literal=db-port=3306
+```
+
+Verify:
+
+```bash
+kubectl get configmap test-cm -o yaml
+```
+
+---
+
+# Update a ConfigMap
+
+Edit:
+
+```bash
+kubectl edit configmap test-cm
+```
+
+Or apply a modified YAML:
+
+```bash
+kubectl apply -f configmap.yaml
+```
+
+> **Note:** Pods using ConfigMaps as environment variables generally need to be restarted to pick up changes. Mounted ConfigMap volumes are updated automatically after a short delay.
+
+---
+
+# ConfigMap vs Secret
+
+| Feature | ConfigMap                   | Secret                                    |
+| ------- | --------------------------- | ----------------------------------------- |
+| Purpose | Non-sensitive configuration | Sensitive data                            |
+| Stores  | App settings, URLs, ports   | Passwords, API keys, tokens               |
+| Encoded | Plain text                  | Base64-encoded (not encrypted by default) |
+| Example | `DB_PORT=3306`              | `DB_PASSWORD=myPassword`                  |
+
+Use a **ConfigMap** for:
+
+* Database host
+* Port numbers
+* Application mode (`dev`, `test`, `prod`)
+* Feature flags
+* Log levels
+
+Use a **Secret** for:
+
+* Database passwords
+* JWT secrets
+* API tokens
+* SSH keys
+* TLS certificates
+
+---
+
+# Where ConfigMap fits in Kubernetes
+
+```text
+                    ConfigMap
+               +----------------+
+               | DB_HOST=mysql  |
+               | DB_PORT=3306   |
+               +-------+--------+
+                       |
+                       |
+                Environment Variables
+                       |
+                       ▼
++--------------------------------------+
+|              Pod                     |
+|                                      |
+|  +-------------------------------+   |
+|  | Python Container              |   |
+|  | DB_HOST=mysql                 |   |
+|  | DB_PORT=3306                  |   |
+|  +-------------------------------+   |
++--------------------------------------+
+```
+
+## Key points to remember
+
+* A **ConfigMap** stores **non-sensitive configuration**.
+* It helps separate configuration from your application image.
+* You can consume it as:
+
+  * Individual environment variables (`configMapKeyRef`)
+  * All environment variables (`envFrom` with `configMapRef`)
+  * Mounted files (volume)
+* It makes applications easier to configure across development, testing, and production environments without rebuilding images.
 
 
