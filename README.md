@@ -27,6 +27,7 @@
   - [Services summary](#services-summary)
 - [What is Ingress in Kubernetes?](#What-is-Ingress-in-Kubernetes)
 - [configMap in Kubernetes](#configMap-in-Kubernetes)
+- [RBAC in kubernetes](#RBAC-in-kubernetes)
 
 ## Introduction
 
@@ -2833,5 +2834,463 @@ Use a **Secret** for:
   * All environment variables (`envFrom` with `configMapRef`)
   * Mounted files (volume)
 * It makes applications easier to configure across development, testing, and production environments without rebuilding images.
+----
 
+
+# RBAC in kubernetes
+
+**RBAC (Role-Based Access Control)** is Kubernetes' authorization mechanism that controls **who can perform what actions on which resources** in a cluster.
+
+It allows cluster administrators to grant permissions to users, groups, or service accounts based on their roles.
+
+> **RBAC = Define who can do what in a Kubernetes cluster**
+
+---
+
+# Why Do We Need RBAC?
+
+Imagine a company where everyone has access to everything.
+
+```text
+Employee A
+
+Can:
+- Delete Production Pods ❌
+- Modify Secrets ❌
+- Create Namespaces ❌
+```
+
+This is risky.
+
+Instead, different people should have different permissions.
+
+Example:
+
+- **Developer** → Deploy applications and view logs.
+- **Tester** → View Pods and Services.
+- **Administrator** → Full access to the cluster.
+
+RBAC makes this possible.
+
+---
+
+# Real-Life Analogy
+
+Think of a company office.
+
+```text
+Company
+
+├── Employee
+├── Manager
+└── Administrator
+```
+
+Each role has different permissions:
+
+| Person | Permissions |
+|---------|-------------|
+| Employee | View documents |
+| Manager | View and edit documents |
+| Administrator | Full control |
+
+Similarly, Kubernetes assigns permissions using RBAC.
+
+---
+
+# How RBAC Works
+
+```text
+User
+
+↓
+
+Authentication
+(Is the user valid?)
+
+↓
+
+RBAC Authorization
+(What is the user allowed to do?)
+
+↓
+
+API Server
+
+↓
+
+Requested Resource
+```
+
+When you run:
+
+```bash
+kubectl delete pod nginx
+```
+
+The API Server checks:
+
+1. Is the user authenticated?
+2. Does RBAC allow deleting Pods?
+
+If yes:
+
+```text
+Permission Granted ✅
+```
+
+Otherwise:
+
+```text
+Forbidden ❌
+```
+
+---
+
+# RBAC Components
+
+There are **four main RBAC resources**:
+
+1. Role
+2. ClusterRole
+3. RoleBinding
+4. ClusterRoleBinding
+
+---
+
+# 1. Role
+
+A **Role** defines permissions **within a single namespace**.
+
+Example:
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: development
+  name: pod-reader
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+```
+
+This Role allows:
+
+- Get Pods
+- List Pods
+- Watch Pods
+
+Only inside the **development** namespace.
+
+---
+
+# 2. ClusterRole
+
+A **ClusterRole** defines permissions for:
+
+- Cluster-wide resources (such as Nodes)
+- All namespaces
+- Or reusable permissions that can later be bound to a specific namespace
+
+Example:
+
+```yaml
+kind: ClusterRole
+
+rules:
+- resources:
+  - nodes
+  verbs:
+  - get
+  - list
+```
+
+This allows viewing all nodes in the cluster.
+
+---
+
+# 3. RoleBinding
+
+A **RoleBinding** assigns a **Role** to a user, group, or service account **within a namespace**.
+
+```text
+Role
+
+↓
+
+RoleBinding
+
+↓
+
+User
+```
+
+Example:
+
+```yaml
+kind: RoleBinding
+
+subjects:
+- kind: User
+  name: aman
+
+roleRef:
+  kind: Role
+  name: pod-reader
+```
+
+Now user **aman** can view Pods in that namespace.
+
+---
+
+# 4. ClusterRoleBinding
+
+A **ClusterRoleBinding** assigns a **ClusterRole** to a user, group, or service account across the cluster.
+
+```text
+ClusterRole
+
+↓
+
+ClusterRoleBinding
+
+↓
+
+User
+```
+
+Example:
+
+```yaml
+kind: ClusterRoleBinding
+```
+
+This grants cluster-wide permissions.
+
+---
+
+# Complete RBAC Flow
+
+```text
+User
+
+↓
+
+kubectl get pods
+
+↓
+
+API Server
+
+↓
+
+RBAC
+
+↓
+
+Role / ClusterRole
+
+↓
+
+RoleBinding / ClusterRoleBinding
+
+↓
+
+Permission Granted
+
+↓
+
+Pods Returned
+```
+
+---
+
+# Role vs ClusterRole
+
+| Feature | Role | ClusterRole |
+|---------|------|-------------|
+| Scope | Single Namespace | Entire Cluster (or reusable across namespaces) |
+| Access Nodes | ❌ | ✅ |
+| Access Pods | ✅ | ✅ |
+| Namespace Required | ✅ | ❌ |
+| Typical Use | Namespace-specific permissions | Cluster-wide administration or shared permissions |
+
+---
+
+# RoleBinding vs ClusterRoleBinding
+
+| Feature | RoleBinding | ClusterRoleBinding |
+|---------|-------------|--------------------|
+| Binds | Role or ClusterRole | ClusterRole |
+| Scope | One Namespace | Entire Cluster |
+| Used For | Team or project access | Cluster administrators and global permissions |
+
+> **Note:** A `RoleBinding` can bind either a **Role** or a **ClusterRole**, but its permissions apply **only within its namespace**.
+
+---
+
+# Common Verbs
+
+RBAC uses **verbs** to define allowed actions.
+
+| Verb | Meaning |
+|------|----------|
+| get | Read one resource |
+| list | List resources |
+| watch | Watch for changes |
+| create | Create resources |
+| update | Modify resources |
+| patch | Partially modify resources |
+| delete | Delete resources |
+| deletecollection | Delete multiple resources |
+
+Example:
+
+```yaml
+verbs:
+- get
+- list
+- watch
+```
+
+---
+
+# Common Resources
+
+Examples of resources you can secure with RBAC:
+
+- Pods
+- Deployments
+- Services
+- Secrets
+- ConfigMaps
+- Nodes
+- Namespaces
+- Jobs
+- StatefulSets
+
+---
+
+# Real-World Example
+
+Suppose your company has three teams.
+
+### Developers
+
+Can:
+
+- Create Deployments
+- View Pods
+- View Logs
+
+Cannot:
+
+- Delete Namespaces
+- Modify Secrets
+
+---
+
+### Testers
+
+Can:
+
+- View Pods
+- View Services
+
+Cannot:
+
+- Deploy Applications
+
+---
+
+### Administrators
+
+Can:
+
+- Create Nodes
+- Delete Nodes
+- Manage Secrets
+- Manage Namespaces
+- Full cluster access
+
+RBAC ensures each team gets only the permissions it needs (the **principle of least privilege**).
+
+---
+
+# Common Commands
+
+Check if a user can perform an action:
+
+```bash
+kubectl auth can-i delete pods
+```
+
+Example:
+
+```text
+yes
+```
+
+Or:
+
+```text
+no
+```
+
+Check another user's permissions (if allowed):
+
+```bash
+kubectl auth can-i get pods --as=aman
+```
+
+View Roles:
+
+```bash
+kubectl get roles
+```
+
+View RoleBindings:
+
+```bash
+kubectl get rolebindings
+```
+
+View ClusterRoles:
+
+```bash
+kubectl get clusterroles
+```
+
+View ClusterRoleBindings:
+
+```bash
+kubectl get clusterrolebindings
+```
+
+---
+
+# Easy Way to Remember
+
+Think of RBAC like a bank.
+
+- **Role** → Job description (Teller, Manager).
+- **RoleBinding** → Employee assigned to that job.
+- **ClusterRole** → Company-wide job description.
+- **ClusterRoleBinding** → Company-wide assignment.
+
+---
+
+# Summary
+
+| Component | Purpose |
+|-----------|---------|
+| **Role** | Defines permissions within a namespace |
+| **ClusterRole** | Defines cluster-wide or reusable permissions |
+| **RoleBinding** | Assigns a Role (or ClusterRole) within a namespace |
+| **ClusterRoleBinding** | Assigns a ClusterRole across the entire cluster |
+| **RBAC** | Controls who can perform which actions on Kubernetes resources |
+
+> **In simple words:** **RBAC (Role-Based Access Control)** is Kubernetes' security system. It determines **who** (user, group, or service account) can perform **which actions** (create, view, update, delete) on **which resources** (Pods, Deployments, Services, Secrets, etc.), helping keep the cluster secure and organized.
 
