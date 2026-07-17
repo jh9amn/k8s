@@ -28,6 +28,7 @@
 - [What is Ingress in Kubernetes?](#What-is-Ingress-in-Kubernetes)
 - [configMap in Kubernetes](#configMap-in-Kubernetes)
 - [RBAC in kubernetes](#RBAC-in-kubernetes)
+- [Monitoring in Kubernetes](#Monitoring-in-Kubernetes)
 
 ## Introduction
 
@@ -3294,3 +3295,511 @@ Think of RBAC like a bank.
 
 > **In simple words:** **RBAC (Role-Based Access Control)** is Kubernetes' security system. It determines **who** (user, group, or service account) can perform **which actions** (create, view, update, delete) on **which resources** (Pods, Deployments, Services, Secrets, etc.), helping keep the cluster secure and organized.
 
+----
+
+
+# Monitoring in Kubernetes
+
+**Kubernetes Monitoring** is the process of continuously collecting, analyzing, and visualizing the health, performance, and resource usage of your Kubernetes cluster and the applications running inside it.
+
+Monitoring helps detect issues **before they affect users** and ensures applications remain healthy and performant.
+
+> **Monitoring = Knowing the health and performance of your Kubernetes cluster in real time.**
+
+---
+
+# Why is Monitoring Important?
+
+Imagine you have an e-commerce application running on Kubernetes.
+
+Without monitoring:
+
+```text
+Pod crashes
+
+↓
+
+Nobody notices
+
+↓
+
+Website becomes unavailable
+
+↓
+
+Customers cannot place orders
+```
+
+With monitoring:
+
+```text
+Pod crashes
+
+↓
+
+Monitoring detects the issue
+
+↓
+
+Alert sent to DevOps Team
+
+↓
+
+Issue fixed quickly
+```
+
+---
+
+# What Should You Monitor?
+
+Monitoring can be divided into several categories.
+
+### 1. Cluster Health
+
+Monitor the health of the Kubernetes cluster.
+
+Examples:
+
+- Node Status
+- Control Plane Health
+- API Server
+- Scheduler
+- etcd
+
+Commands:
+
+```bash
+kubectl get nodes
+kubectl cluster-info
+```
+
+---
+
+### 2. Node Monitoring
+
+Monitor each Worker Node.
+
+Metrics include:
+
+- CPU Usage
+- Memory Usage
+- Disk Usage
+- Network Usage
+
+Example:
+
+```bash
+kubectl top nodes
+```
+
+Output:
+
+```text
+NAME       CPU(cores)   MEMORY(bytes)
+worker-1   500m         2Gi
+worker-2   250m         1.5Gi
+```
+
+---
+
+### 3. Pod Monitoring
+
+Monitor application Pods.
+
+Things to check:
+
+- Running Status
+- Restarts
+- CrashLoopBackOff
+- Pending Pods
+
+Commands:
+
+```bash
+kubectl get pods
+kubectl describe pod <pod-name>
+```
+
+---
+
+### 4. Container Monitoring
+
+Monitor individual containers.
+
+Examples:
+
+- CPU Usage
+- Memory Usage
+- Restarts
+- Logs
+
+Command:
+
+```bash
+kubectl top pods
+```
+
+---
+
+### 5. Application Monitoring
+
+Monitor your application itself.
+
+Examples:
+
+- Response Time
+- Request Rate
+- Error Rate
+- HTTP Status Codes
+- Database Connections
+
+---
+
+### 6. Network Monitoring
+
+Monitor:
+
+- Service Connectivity
+- Ingress Traffic
+- DNS Resolution
+- Network Latency
+- Packet Loss
+
+---
+
+### 7. Storage Monitoring
+
+Monitor:
+
+- Persistent Volumes
+- Disk Usage
+- Read/Write Operations
+- Storage Capacity
+
+---
+
+# Kubernetes Monitoring Architecture
+
+```text
+                    Kubernetes Cluster
+                           │
+     ---------------------------------------------
+     │                                           │
+ Worker Node 1                           Worker Node 2
+     │                                           │
++------------+                           +------------+
+| Pods       |                           | Pods       |
+| kubelet    |                           | kubelet    |
++------------+                           +------------+
+      │                                         │
+      └─────────────── Metrics ──────────────────┘
+                          │
+                          ▼
+                    Prometheus
+                          │
+               Stores Time-Series Data
+                          │
+                          ▼
+                      Grafana
+                          │
+                    Dashboards
+                          │
+                          ▼
+                     DevOps Team
+```
+
+---
+
+# Popular Monitoring Tools
+
+## 1. Metrics Server
+
+The **Metrics Server** is the basic monitoring component in Kubernetes.
+
+It collects:
+
+- CPU Usage
+- Memory Usage
+
+Commands:
+
+```bash
+kubectl top nodes
+kubectl top pods
+```
+
+Suitable for:
+
+- Development
+- Learning
+- Horizontal Pod Autoscaler (HPA)
+
+---
+
+## 2. Prometheus
+
+Prometheus is the **most popular monitoring system** for Kubernetes.
+
+It:
+
+- Collects metrics
+- Stores time-series data
+- Supports powerful queries using **PromQL**
+- Triggers alerts
+
+Collects metrics like:
+
+- CPU
+- Memory
+- Network
+- Disk
+- Pod Restarts
+- HTTP Requests
+
+---
+
+## 3. Grafana
+
+Grafana is used to **visualize metrics** collected by Prometheus.
+
+Features:
+
+- Beautiful dashboards
+- Real-time graphs
+- Alerts
+- Reports
+
+Example Dashboard:
+
+```text
+CPU Usage
+
+███████████
+
+Memory Usage
+
+████████
+
+Network
+
+█████
+```
+
+---
+
+## 4. Alertmanager
+
+Alertmanager works with Prometheus.
+
+Responsibilities:
+
+- Send Email Alerts
+- Slack Notifications
+- Microsoft Teams Notifications
+- PagerDuty Alerts
+
+Example:
+
+```text
+CPU > 90%
+
+↓
+
+Alertmanager
+
+↓
+
+Email
+
+↓
+
+DevOps Engineer
+```
+
+---
+
+## 5. ELK Stack (Logging)
+
+Monitoring is often combined with logging.
+
+ELK stands for:
+
+- Elasticsearch
+- Logstash
+- Kibana
+
+Used for:
+
+- Collecting logs
+- Searching logs
+- Visualizing logs
+
+---
+
+# Metrics vs Logs
+
+| Metrics | Logs |
+|----------|------|
+| Numerical data | Text data |
+| CPU Usage | Application Errors |
+| Memory Usage | Stack Traces |
+| Disk Usage | Login Events |
+| Request Count | Exception Messages |
+
+Both are important for troubleshooting.
+
+---
+
+# Monitoring Workflow
+
+```text
+Application
+
+↓
+
+Metrics Generated
+
+↓
+
+Prometheus
+
+↓
+
+Grafana Dashboard
+
+↓
+
+Alertmanager
+
+↓
+
+DevOps Team
+```
+
+---
+
+# Common kubectl Commands
+
+Check Nodes:
+
+```bash
+kubectl get nodes
+```
+
+Check Pods:
+
+```bash
+kubectl get pods
+```
+
+CPU & Memory:
+
+```bash
+kubectl top nodes
+kubectl top pods
+```
+
+Describe Pod:
+
+```bash
+kubectl describe pod <pod-name>
+```
+
+View Logs:
+
+```bash
+kubectl logs <pod-name>
+```
+
+View Events:
+
+```bash
+kubectl get events
+```
+
+---
+
+# Real-World Example
+
+Suppose your application suddenly becomes slow.
+
+Monitoring Dashboard shows:
+
+```text
+CPU Usage
+
+95%
+
+Memory
+
+85%
+
+Pod Restarts
+
+12
+
+HTTP Errors
+
+500
+```
+
+From these metrics, you can identify:
+
+- High CPU usage
+- Frequent Pod crashes
+- Increased server errors
+
+You might then:
+
+- Scale the Deployment
+- Investigate application logs
+- Increase resource limits
+- Fix the underlying application issue
+
+---
+
+# Monitoring Best Practices
+
+✅ Monitor Nodes
+
+✅ Monitor Pods
+
+✅ Monitor Containers
+
+✅ Monitor Application Performance
+
+✅ Set Alerts for Critical Metrics
+
+✅ Collect Logs
+
+✅ Create Dashboards
+
+✅ Regularly Review Cluster Health
+
+---
+
+# Interview Tip
+
+**Q:** Which tools are commonly used for Kubernetes monitoring?
+
+**Answer:**
+
+- **Metrics Server** – Basic CPU and memory metrics.
+- **Prometheus** – Collects and stores metrics.
+- **Grafana** – Visualizes metrics with dashboards.
+- **Alertmanager** – Sends alerts based on rules.
+- **ELK Stack** (or alternatives like Loki) – Collects and analyzes logs.
+
+---
+
+# Summary
+
+| Tool | Purpose |
+|------|---------|
+| **Metrics Server** | Basic CPU and Memory Metrics |
+| **Prometheus** | Collect Metrics & Time-Series Storage |
+| **Grafana** | Dashboards & Visualization |
+| **Alertmanager** | Alert Notifications |
+| **ELK Stack / Loki** | Centralized Logging |
+
+> **In simple words:** Kubernetes monitoring is the process of tracking the health and performance of your cluster, nodes, Pods, containers, and applications. In production, the most common monitoring stack is **Prometheus + Grafana + Alertmanager**, while **ELK Stack** or **Loki** is commonly used for centralized logging.
