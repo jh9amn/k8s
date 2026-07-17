@@ -29,8 +29,7 @@
 - [configMap in Kubernetes](#configMap-in-Kubernetes)
 - [RBAC in kubernetes](#RBAC-in-kubernetes)
 - [Monitoring in Kubernetes](#Monitoring-in-Kubernetes)
-- [Kubernetes Custom Resources, CRDs, Controllers & Operators](#Kubernetes-Custom-Resources,-CRDs,-Controllers-&-Operators)
-
+- [Kubernetes Custom Resources, CRDs, Controllers & Operators](#Kubernetes-Custom-Resources-CRDs-Controllers-&-Operators)
 - [1. Why Kubernetes Needs Extension](#1-why-kubernetes-needs-extension)
 - [2. Built-in Kubernetes Resources](#2-built-in-kubernetes-resources)
 - [3. What is a Custom Resource (CR)?](#3-what-is-a-custom-resource-cr)
@@ -3828,7 +3827,7 @@ You might then:
 
 ------
 
-# Kubernetes Custom Resources, CRDs, Controllers & Operators
+# Kubernetes Custom Resources CRDs Controllers & Operators
 
 # 1. Why Kubernetes Needs Extension
 
