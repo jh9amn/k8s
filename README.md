@@ -29,6 +29,27 @@
 - [configMap in Kubernetes](#configMap-in-Kubernetes)
 - [RBAC in kubernetes](#RBAC-in-kubernetes)
 - [Monitoring in Kubernetes](#Monitoring-in-Kubernetes)
+- [Kubernetes Custom Resources, CRDs, Controllers & Operators](#Kubernetes-Custom-Resources,-CRDs,-Controllers-&-Operators)
+
+- [1. Why Kubernetes Needs Extension](#1-why-kubernetes-needs-extension)
+- [2. Built-in Kubernetes Resources](#2-built-in-kubernetes-resources)
+- [3. What is a Custom Resource (CR)?](#3-what-is-a-custom-resource-cr)
+- [4. What is a Custom Resource Definition (CRD)?](#4-what-is-a-custom-resource-definition-crd)
+- [5. CR vs CRD](#5-cr-vs-crd)
+- [6. How CRDs Work Internally](#6-how-crds-work-internally)
+- [7. Validation in CRDs](#7-validation-in-crds)
+- [8. What is a Custom Controller?](#8-what-is-a-custom-controller)
+- [9. Watchers (Informer)](#9-watchers-informer)
+- [10. Reconciliation Loop](#10-reconciliation-loop)
+- [11. client-go](#11-client-go)
+- [12. controller-runtime](#12-controller-runtime)
+- [13. Operator Pattern](#13-operator-pattern)
+- [14. Operator SDK](#14-operator-sdk)
+- [15. Istio VirtualService Example](#15-istio-virtualservice-example)
+- [16. CNCF and Istio](#16-cncf-and-istio)
+- [17. Kubernetes Sample Controller](#17-kubernetes-sample-controller)
+- [18. Complete Workflow](#18-complete-workflow)
+- [19. Interview Questions](#19-interview-questions)
 
 ## Introduction
 
@@ -3803,3 +3824,716 @@ You might then:
 | **ELK Stack / Loki** | Centralized Logging |
 
 > **In simple words:** Kubernetes monitoring is the process of tracking the health and performance of your cluster, nodes, Pods, containers, and applications. In production, the most common monitoring stack is **Prometheus + Grafana + Alertmanager**, while **ELK Stack** or **Loki** is commonly used for centralized logging.
+
+
+------
+
+# Kubernetes Custom Resources, CRDs, Controllers & Operators
+
+# 1. Why Kubernetes Needs Extension
+
+Kubernetes already provides many built-in resources.
+
+Examples:
+
+- Pod
+- Deployment
+- Service
+- ConfigMap
+- Secret
+- Namespace
+
+But every company has different requirements.
+
+Imagine you want Kubernetes to manage:
+
+- Database clusters
+- Kafka clusters
+- Machine Learning models
+- Certificates
+- DNS records
+- Cloud resources
+
+Kubernetes doesn't know these resources.
+
+So Kubernetes allows us to create our own resources.
+
+These are called **Custom Resources**.
+
+---
+
+# 2. Built-in Kubernetes Resources
+
+Example:
+
+```yaml
+kind: Pod
+```
+
+```yaml
+kind: Deployment
+```
+
+```yaml
+kind: Service
+```
+
+These resource types are already understood by Kubernetes.
+
+---
+
+# 3. What is a Custom Resource (CR)?
+
+A **Custom Resource (CR)** is a **new Kubernetes object** created by users after defining a CRD.
+
+Think of it like creating your own Kubernetes object.
+
+Example:
+
+Instead of
+
+```yaml
+kind: Deployment
+```
+
+You create
+
+```yaml
+kind: Database
+```
+
+or
+
+```yaml
+kind: VirtualService
+```
+
+These are not built into Kubernetes.
+
+They become available after installing a CRD.
+
+---
+
+## Real Life Analogy
+
+Imagine Microsoft Word.
+
+Built-in:
+
+- Heading
+- Table
+- Paragraph
+
+Now imagine a plugin adds
+
+- UML Diagram
+- Mind Map
+
+Those new objects are like Custom Resources.
+
+---
+
+# 4. What is a Custom Resource Definition (CRD)?
+
+A **CRD** tells Kubernetes about a **new resource type**.
+
+Think of it as:
+
+> "Hey Kubernetes, from today onward, understand this new object."
+
+Example:
+
+```yaml
+kind: CustomResourceDefinition
+```
+
+Once installed
+
+Kubernetes understands
+
+```yaml
+kind: Database
+```
+
+or
+
+```yaml
+kind: VirtualService
+```
+
+---
+
+## CRD Responsibilities
+
+- Register new API
+- Register new Kind
+- Define Schema
+- Validate Input
+- Store object inside etcd
+
+---
+
+# 5. CR vs CRD
+
+| CRD | CR |
+|------|----|
+| Defines new resource type | Instance of resource |
+| Installed once | Created many times |
+| Like a Class | Like an Object |
+| Example: Database Definition | Example: Production Database |
+
+---
+
+Example
+
+CRD
+
+```text
+Car
+```
+
+CR
+
+```text
+BMW
+
+Audi
+
+Tesla
+```
+
+---
+
+# 6. How CRDs Work Internally
+
+```
+User
+
+↓
+
+kubectl apply CRD
+
+↓
+
+API Server
+
+↓
+
+Registers new API
+
+↓
+
+etcd stores schema
+
+↓
+
+Now Kubernetes understands new object
+```
+
+---
+
+# 7. Validation in CRDs
+
+CRDs support validation using OpenAPI Schema.
+
+Example
+
+```yaml
+age:
+  type: integer
+```
+
+Now
+
+```yaml
+age: hello
+```
+
+will fail.
+
+Validation prevents invalid objects.
+
+Example validations
+
+- string
+- integer
+- boolean
+- enum
+- minimum
+- maximum
+- required fields
+
+---
+
+# 8. What is a Custom Controller?
+
+Creating a CRD only stores objects.
+
+Nothing happens automatically.
+
+A **Controller** watches Custom Resources and performs actions.
+
+Example
+
+```
+Database CR created
+
+↓
+
+Controller sees it
+
+↓
+
+Creates Pod
+
+↓
+
+Creates PVC
+
+↓
+
+Creates Service
+
+↓
+
+Database becomes ready
+```
+
+Controller = Brain
+
+---
+
+# 9. Watchers (Informer)
+
+A Controller continuously watches Kubernetes.
+
+Events
+
+```
+Create
+
+Update
+
+Delete
+```
+
+Whenever one happens
+
+Controller reacts.
+
+Example
+
+```
+VirtualService Updated
+
+↓
+
+Controller notices
+
+↓
+
+Updates Envoy configuration
+```
+
+---
+
+# 10. Reconciliation Loop
+
+Controllers continuously compare
+
+Desired State
+
+vs
+
+Actual State
+
+Example
+
+Desired
+
+```
+3 Pods
+```
+
+Actual
+
+```
+2 Pods
+```
+
+Controller
+
+↓
+
+Creates one Pod.
+
+This continuous checking is called
+
+**Reconciliation Loop**
+
+---
+
+# 11. client-go
+
+client-go is the **official Go library** for Kubernetes.
+
+It allows Go programs to communicate with Kubernetes.
+
+Example
+
+```go
+clientset.CoreV1().
+Pods("default").
+List(...)
+```
+
+Used for
+
+- Create Pods
+- Delete Pods
+- Watch Resources
+- Read Resources
+
+Every controller written in Go uses client-go.
+
+---
+
+# 12. controller-runtime
+
+Writing controllers using client-go is complicated.
+
+controller-runtime is a higher-level framework.
+
+It provides
+
+- Manager
+- Cache
+- Reconciler
+- Event handling
+- Leader election
+
+Much less code.
+
+Most modern controllers use
+
+controller-runtime.
+
+---
+
+# 13. Operator Pattern
+
+Operator =
+
+CRD
+
++
+
+Custom Controller
+
+Business Logic
+
+Operator automates complex applications.
+
+Example
+
+```
+PostgreSQL Operator
+
+↓
+
+Database CR
+
+↓
+
+Automatically
+
+Creates DB
+
+Backups
+
+Recovery
+
+Scaling
+
+Upgrade
+```
+
+Operators replace manual administration.
+
+---
+
+# 14. Operator SDK
+
+Operator SDK is a framework for building Operators.
+
+It provides
+
+- Project scaffolding
+- CRD generation
+- Controller generation
+- Testing
+- Packaging
+
+Supported Languages
+
+- Go
+- Helm
+- Ansible
+
+---
+
+# 15. Istio VirtualService Example
+
+Istio adds a CRD called
+
+```
+VirtualService
+```
+
+Example
+
+```yaml
+kind: VirtualService
+```
+
+Example
+
+```
+api.example.com
+
+↓
+
+Route
+
+↓
+
+Version v1
+```
+
+or
+
+```
+90%
+
+↓
+
+v1
+
+10%
+
+↓
+
+v2
+```
+
+This enables
+
+- Traffic Splitting
+- Canary Deployment
+- A/B Testing
+- Retry
+- Timeout
+
+Without changing application code.
+
+---
+
+# 16. CNCF and Istio
+
+CNCF
+
+=
+
+Cloud Native Computing Foundation
+
+It hosts many cloud-native projects.
+
+Examples
+
+- Kubernetes
+- Prometheus
+- Envoy
+- Fluentd
+- OpenTelemetry
+- Helm
+- Harbor
+- containerd
+- etcd
+
+Istio is a CNCF graduated project (through its stewardship with the community and Envoy ecosystem).
+
+Istio provides
+
+- Service Mesh
+- Traffic Management
+- Security
+- Observability
+
+---
+
+# 17. Kubernetes Sample Controller
+
+The Kubernetes project provides a Sample Controller.
+
+Purpose
+
+Learn how Controllers work.
+
+Repository
+
+```
+kubernetes/sample-controller
+```
+
+It demonstrates
+
+- CRD
+- Controller
+- Watchers
+- Informers
+- Reconciliation
+
+Useful for beginners.
+
+---
+
+# 18. Complete Workflow
+
+```
+Developer
+
+↓
+
+Create CRD
+
+↓
+
+Install CRD
+
+↓
+
+API Server registers new API
+
+↓
+
+Create Custom Resource
+
+↓
+
+Stored in etcd
+
+↓
+
+Controller watches
+
+↓
+
+Controller receives event
+
+↓
+
+Reconcile()
+
+↓
+
+Creates Pods
+
+↓
+
+Creates Services
+
+↓
+
+Creates PVC
+
+↓
+
+Application Running
+```
+
+---
+
+# Complete Architecture
+
+```
+                  Kubernetes Cluster
+
+                       API Server
+                           │
+          ------------------------------
+          │                            │
+         etcd                 Custom Controller
+                                    │
+                           Watches CR Events
+                                    │
+          -----------------------------------------
+          │                 │                     │
+       CREATE            UPDATE               DELETE
+                                    │
+                                    ▼
+                              Reconcile()
+                                    │
+                                    ▼
+                    Creates Kubernetes Resources
+                           (Pods, Services,
+                        Deployments, PVC, etc.)
+                                    │
+                                    ▼
+                             Application Running
+```
+
+---
+
+# Summary
+
+| Term | Description |
+|------|-------------|
+| Custom Resource (CR) | Instance of a custom Kubernetes object |
+| CRD | Registers a new Kubernetes resource type |
+| Validation | Ensures Custom Resources have valid data |
+| Custom Controller | Watches CRs and performs actions |
+| Watchers | Detect Create, Update, Delete events |
+| Reconciliation | Makes actual state match desired state |
+| client-go | Official Go client for Kubernetes |
+| controller-runtime | Simplifies writing controllers |
+| Operator | CRD + Controller + Business Logic |
+| Operator SDK | Framework for building Operators |
+| VirtualService | Istio Custom Resource for traffic routing |
+| Istio | Service Mesh built on Kubernetes |
+| CNCF | Organization hosting cloud-native projects |
+| Sample Controller | Reference project for learning Kubernetes controllers |
+
+---
+
+# Easy Way to Remember
+
+```
+CRD
+│
+├── Introduces a new resource type
+│
+▼
+CR
+│
+├── Creates an object of that type
+│
+▼
+Controller
+│
+├── Watches the object
+│
+▼
+Reconcile()
+│
+├── Creates or updates Kubernetes resources
+│
+▼
+Application Runs
+```
+
+### One-line memory trick
+
+- **CRD** → *Defines a new Kubernetes resource type.*
+- **CR** → *An object created from that type.*
+- **Controller** → *Watches CRs and keeps the cluster in the desired state.*
+- **Operator** → *A smart controller that automates application management.*
