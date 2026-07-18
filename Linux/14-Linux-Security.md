@@ -1,4 +1,4 @@
-# 🔒 Chapter 16 - Linux Security
+# 🔒 Chapter 14 - Linux Security
 
 > **"Security is not a product—it's a continuous process. A secure Linux system protects data, services, and users from unauthorized access and attacks."**
 
