@@ -1,4 +1,4 @@
-# 📘 Chapter 14 - Logs and System Monitoring
+# 📘 Chapter 12 - Logs and System Monitoring
 
 > **"Logs are the eyes of a Linux system. Monitoring is the heartbeat of a production server."**
 
