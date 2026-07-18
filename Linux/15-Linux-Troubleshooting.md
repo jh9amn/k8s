@@ -1,4 +1,4 @@
-# 🛠️ Chapter 17 - Linux Troubleshooting
+# 🛠️ Chapter 15 - Linux Troubleshooting
 
 > **"Troubleshooting is the art of finding the root cause of a problem—not just fixing the symptoms."**
 
