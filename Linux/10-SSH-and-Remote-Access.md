@@ -1,4 +1,4 @@
-# ☸ Chapter 11 - SSH and Remote Access
+# ☸ Chapter 10 - SSH and Remote Access
 
 > **"SSH is the standard way to securely access and manage remote Linux servers."**
 
