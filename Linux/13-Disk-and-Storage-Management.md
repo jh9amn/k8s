@@ -1,4 +1,4 @@
-# 💾 Chapter 15 - Disk and Storage Management
+# 💾 Chapter 13 - Disk and Storage Management
 
 > **"Storage is the foundation of every Linux system. Understanding disks, partitions, filesystems, and storage management is essential for every Linux administrator and DevOps engineer."**
 
