@@ -18,13 +18,13 @@
 | Chapter 7 | [Package Management](07-Package-Management.md) |
 | Chapter 8 | [Networking Fundamentals](08-Networking-Fundamentals.md) |
 | Chapter 9 | [Bash Scripting](09-Bash-Scripting.md) |
-| Chapter 10 | [SSH & Remote Access](11-SSH-and-Remote-Access.md) |
-| Chapter 11 | [Cron Jobs & Automation](13-Cron-Jobs-and-Automation.md) |
-| Chapter 12 | [Logs & System Monitoring](14-Logs-and-System-Monitoring.md) |
-| Chapter 13 | [Disk & Storage Management](15-Disk-and-Storage-Management.md) |
-| Chapter 14 | [Linux Security](16-Linux-Security.md) |
-| Chapter 15 | [Linux Troubleshooting](17-Linux-Troubleshooting.md) |
-| Chapter 16 | [Linux Production Best Practices](18-Linux-Production-Best-Practices.md) |
+| Chapter 10 | [SSH & Remote Access](10-SSH-and-Remote-Access.md) |
+| Chapter 11 | [Cron Jobs & Automation](11-Cron-Jobs-and-Automation.md) |
+| Chapter 12 | [Logs & System Monitoring](12-Logs-and-System-Monitoring.md) |
+| Chapter 13 | [Disk & Storage Management](13-Disk-and-Storage-Management.md) |
+| Chapter 14 | [Linux Security](14-Linux-Security.md) |
+| Chapter 15 | [Linux Troubleshooting](15-Linux-Troubleshooting.md) |
+| Chapter 16 | [Linux Production Best Practices](16-Linux-Production-Best-Practices.md) |
 
 ---
 
