@@ -1154,3 +1154,629 @@ sudo chage -W 10 aman
 This is commonly enforced in enterprise environments for security compliance.
 
 ---
+
+---
+
+# 19. Switching Users (`su`)
+
+Sometimes, a system administrator needs to switch from one user account to another without logging out.
+
+Linux provides the **`su` (Substitute User / Switch User)** command.
+
+---
+
+## Syntax
+
+```bash
+su username
+```
+
+Example:
+
+```bash
+su aman
+```
+
+Linux asks for **Aman's password** and switches to that user.
+
+---
+
+## Switch to Root User
+
+```bash
+su -
+```
+
+or
+
+```bash
+su - root
+```
+
+Example:
+
+```bash
+$ su -
+
+Password:
+```
+
+Now your shell becomes:
+
+```text
+root@server:~#
+```
+
+The `-` is important because it loads the target user's environment:
+
+- Home directory
+- Environment variables
+- PATH
+- Shell configuration
+
+Without `-`:
+
+```bash
+su root
+```
+
+you switch users but keep parts of your current environment.
+
+---
+
+# Verify Current User
+
+```bash
+whoami
+```
+
+Output:
+
+```text
+root
+```
+
+---
+
+# Internal Working
+
+```
+User
+
+↓
+
+su
+
+↓
+
+Authenticate Password
+
+↓
+
+Kernel verifies credentials
+
+↓
+
+Create New Shell
+
+↓
+
+Switch UID/GID
+
+↓
+
+Done
+```
+
+---
+
+# 20. Using `sudo`
+
+In modern Linux systems, administrators rarely log in directly as `root`.
+
+Instead, they use **`sudo` (SuperUser DO)**.
+
+Example:
+
+```bash
+sudo apt update
+```
+
+Instead of switching to the root account permanently, `sudo` grants **temporary administrative privileges** for a single command.
+
+---
+
+## Why Use `sudo`?
+
+Imagine three administrators:
+
+```
+Aman
+
+Rahul
+
+Priya
+```
+
+Instead of sharing the root password:
+
+```
+Everyone logs in using
+
+↓
+
+their own account
+
+↓
+
+sudo grants temporary root access
+```
+
+Advantages:
+
+- Better security
+- Individual accountability
+- Detailed audit logs
+- Reduced risk of accidental system changes
+
+---
+
+## Common Examples
+
+Install a package:
+
+```bash
+sudo apt install nginx
+```
+
+Restart a service:
+
+```bash
+sudo systemctl restart nginx
+```
+
+View protected logs:
+
+```bash
+sudo cat /var/log/auth.log
+```
+
+---
+
+# Difference Between `su` and `sudo`
+
+| Feature | `su` | `sudo` |
+|---------|------|---------|
+| Purpose | Switch user | Run one command as another user (usually root) |
+| Password Required | Target user's password | Current user's password |
+| Duration | Until you exit the shell | Only for the executed command |
+| Audit Logging | Limited | Extensive logs |
+| Recommended | Rarely | Yes (preferred) |
+
+---
+
+# 21. Configuring `sudo` with `visudo`
+
+The permissions for `sudo` are defined in:
+
+```text
+/etc/sudoers
+```
+
+⚠️ Never edit this file directly using `vim` or `nano`.
+
+Instead, use:
+
+```bash
+sudo visudo
+```
+
+Why?
+
+`visudo`:
+
+- Checks syntax before saving.
+- Prevents multiple administrators from editing simultaneously.
+- Helps avoid breaking `sudo` due to configuration errors.
+
+Example entry:
+
+```text
+aman ALL=(ALL:ALL) ALL
+```
+
+Meaning:
+
+- User: `aman`
+- On all hosts
+- Can act as all users/groups
+- May run all commands
+
+---
+
+# 22. How Linux Authentication Works
+
+Whenever a user logs in:
+
+```
+Username
+
+↓
+
+Login Prompt
+
+↓
+
+/etc/passwd
+
+↓
+
+Find User
+
+↓
+
+/etc/shadow
+
+↓
+
+Verify Password Hash
+
+↓
+
+PAM Checks
+
+↓
+
+Create Session
+
+↓
+
+Start Login Shell
+```
+
+The kernel doesn't compare plaintext passwords.
+
+Instead:
+
+1. User enters password.
+2. Password is hashed.
+3. Hash is compared with the stored hash.
+4. If they match, authentication succeeds.
+
+---
+
+# 23. Introduction to PAM (Pluggable Authentication Modules)
+
+PAM is the authentication framework used by most modern Linux distributions.
+
+Instead of every application implementing its own login logic, they delegate authentication to PAM.
+
+```
+SSH
+
+↓
+
+PAM
+
+↓
+
+Password Check
+
+↓
+
+Login Allowed
+```
+
+Other applications that use PAM:
+
+- SSH
+- `sudo`
+- `su`
+- Login managers
+- Screen lockers
+
+PAM configuration files are typically located in:
+
+```text
+/etc/pam.d/
+```
+
+Examples:
+
+```text
+/etc/pam.d/sshd
+/etc/pam.d/sudo
+/etc/pam.d/login
+```
+
+---
+
+# 24. Docker and Users
+
+Containers also run as users.
+
+Check the current user inside a container:
+
+```bash
+docker exec -it mycontainer whoami
+```
+
+Many images run as:
+
+```text
+root
+```
+
+However, running containers as `root` is not recommended in production.
+
+Instead, specify a non-root user:
+
+```dockerfile
+USER appuser
+```
+
+Benefits:
+
+- Better isolation
+- Reduced attack surface
+- Compliance with security best practices
+
+---
+
+# 25. Kubernetes and Users
+
+Kubernetes allows you to control which user a container runs as.
+
+Example:
+
+```yaml
+securityContext:
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 2000
+```
+
+### Meaning
+
+- `runAsUser` → Process runs with UID 1001.
+- `runAsGroup` → Primary group is GID 1001.
+- `fsGroup` → Mounted volumes are accessible by group 2000.
+
+This is commonly used to avoid permission issues with persistent volumes.
+
+---
+
+# 26. Production Scenario
+
+## Scenario 1: Docker Permission Error
+
+Problem:
+
+```text
+Permission denied
+```
+
+Investigation:
+
+```bash
+whoami
+id
+ls -l
+```
+
+Solution:
+
+- Change ownership:
+
+```bash
+sudo chown appuser:appuser file.txt
+```
+
+- Or adjust permissions if appropriate.
+
+---
+
+## Scenario 2: User Can't Run Docker
+
+Problem:
+
+```bash
+docker ps
+```
+
+Output:
+
+```text
+permission denied
+```
+
+Fix:
+
+```bash
+sudo usermod -aG docker aman
+```
+
+Then log out and log back in.
+
+---
+
+## Scenario 3: Kubernetes Pod Can't Write to a Volume
+
+Possible cause:
+
+- Incorrect UID/GID.
+- Missing `fsGroup`.
+
+Solution:
+
+Configure:
+
+```yaml
+securityContext:
+  runAsUser: 1001
+  fsGroup: 1001
+```
+
+---
+
+# 27. Best Practices
+
+- Avoid logging in directly as `root`.
+- Use `sudo` whenever possible.
+- Follow the **Principle of Least Privilege**.
+- Assign users to groups rather than granting permissions individually.
+- Lock unused accounts.
+- Enforce password aging with `chage`.
+- Use strong password policies.
+- Review `sudo` access regularly.
+
+---
+
+# 28. Common Mistakes
+
+❌ Sharing the root password.
+
+❌ Giving everyone `sudo` access.
+
+❌ Forgetting the `-a` flag with `usermod -aG`.
+
+❌ Editing `/etc/sudoers` directly.
+
+❌ Running production containers as `root`.
+
+❌ Ignoring password expiration policies.
+
+---
+
+# 29. Hands-on Lab
+
+### Create a User
+
+```bash
+sudo useradd -m devuser
+```
+
+### Set a Password
+
+```bash
+sudo passwd devuser
+```
+
+### Create a Group
+
+```bash
+sudo groupadd developers
+```
+
+### Add User to Group
+
+```bash
+sudo usermod -aG developers devuser
+```
+
+### Verify Membership
+
+```bash
+groups devuser
+```
+
+### Switch User
+
+```bash
+su - devuser
+```
+
+### Display User Information
+
+```bash
+id
+whoami
+```
+
+### Lock the Account
+
+```bash
+sudo passwd -l devuser
+```
+
+### Unlock the Account
+
+```bash
+sudo passwd -u devuser
+```
+
+---
+
+# 30. Interview Questions
+
+## Beginner
+
+1. What is the difference between a root user and a regular user?
+2. What is a UID?
+3. What is a GID?
+4. What is the purpose of `/etc/passwd`?
+5. Why are passwords stored in `/etc/shadow`?
+
+---
+
+## Intermediate
+
+1. Explain the difference between `su` and `sudo`.
+2. What does `visudo` do?
+3. Why is `usermod -aG` preferred over `usermod -G`?
+4. What is a system user?
+5. How does Linux authenticate a user during login?
+
+---
+
+## Advanced
+
+1. Explain the authentication flow from login to shell creation.
+2. What is PAM and why is it useful?
+3. Why is running Docker containers as `root` discouraged?
+4. How do `runAsUser` and `fsGroup` improve Kubernetes security?
+5. How would you troubleshoot a "Permission denied" error for a service account?
+
+---
+
+# 31. Quick Cheat Sheet
+
+| Command | Purpose |
+|---------|---------|
+| `whoami` | Display current user |
+| `id` | Show UID, GID, and groups |
+| `who` | Show logged-in users |
+| `w` | Show logged-in users and activity |
+| `useradd -m` | Create a new user with a home directory |
+| `adduser` | Interactive user creation (Debian/Ubuntu) |
+| `usermod -aG` | Add a user to a supplementary group |
+| `userdel -r` | Delete a user and home directory |
+| `groupadd` | Create a group |
+| `groupdel` | Delete a group |
+| `passwd` | Change or set a password |
+| `passwd -l` | Lock an account |
+| `passwd -u` | Unlock an account |
+| `chage -l` | Show password aging information |
+| `su -` | Switch to another user with a login shell |
+| `sudo` | Execute a command with elevated privileges |
+| `visudo` | Safely edit the sudoers file |
+
+---
+
+# 32. Chapter Summary
+
+In this chapter, you learned:
+
+- Linux's multi-user architecture.
+- The roles of root, system, and regular users.
+- How UIDs and GIDs identify users and groups.
+- The purpose of `/etc/passwd`, `/etc/shadow`, `/etc/group`, and `/etc/gshadow`.
+- How to create, modify, and delete users and groups.
+- How `su`, `sudo`, and `visudo` work.
+- The Linux authentication flow and PAM.
+- User management in Docker and Kubernetes.
+- Best practices for securing user accounts and administrative access.
+
+These concepts are foundational for Linux administration, DevOps, cloud platforms, and Kubernetes security.
+
+
