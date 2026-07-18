@@ -6,22 +6,22 @@
 
 # 📚 Table of Contents
 
-| Chapter | Description |
-|---------|-------------|
-| 📘 [Chapter 1 - Docker Introduction](01-Docker-Introduction.md) | Learn what Docker is, why it was created, containers vs virtual machines, architecture overview, installation, and first container. |
-| 📘 [Chapter 2 - Docker Architecture](02-Docker-Architecture.md) | Understand Docker Client, Docker Daemon, Docker Engine, Registry, workflow, and internal architecture. |
-| 📘 [Chapter 3 - Docker Images & Containers](03-Docker-Images-and-Containers.md) | Learn image layers, copy-on-write, image lifecycle, container lifecycle, and essential commands. |
-| 📘 [Chapter 4 - Docker CLI](04-Docker-CLI.md) | Complete Docker CLI reference including image, container, network, volume, and system commands. |
-| 📘 [Chapter 5 - Dockerfile](05-Dockerfile.md) | Master Dockerfiles, build instructions, CMD vs ENTRYPOINT, ENV, ARG, USER, HEALTHCHECK, and best practices. |
-| 📘 [Chapter 6 - Docker Volumes](06-Docker-Volumes.md) | Learn persistent storage, bind mounts, named volumes, tmpfs, backups, and storage best practices. |
-| 📘 [Chapter 7 - Docker Networking](07-Docker-Networking.md) | Learn Bridge, Host, None, Overlay, Macvlan, DNS resolution, and networking best practices. |
-| 📘 [Chapter 8 - Docker Compose](08-Docker-Compose.md) | Build multi-container applications using Compose, services, networks, volumes, scaling, and environment variables. |
-| 📘 [Chapter 9 - Docker Registry](09-Docker-Registry.md) | Learn Docker Hub, private registries, tagging strategies, pushing and pulling images, and registry security. |
-| 📘 [Chapter 10 - Multi-Stage Builds](10-Multi-Stage-Builds.md) | Optimize Docker images using Multi-Stage Builds, BuildKit, and production-ready Dockerfiles. |
-| 📘 [Chapter 11 - Docker Security](11-Docker-Security.md) | Learn Namespaces, cgroups, capabilities, Seccomp, AppArmor, SELinux, secrets management, and image scanning. |
-| 📘 [Chapter 12 - Docker Logging & Monitoring](12-Docker-Logging-and-Monitoring.md) | Explore Docker logs, logging drivers, health checks, Prometheus, Grafana, centralized logging, and monitoring. |
-| 📘 [Chapter 13 - Docker Best Practices](13-Docker-Best-Practices.md) | Production-ready Docker practices, optimization, security, CI/CD, deployment checklist, and anti-patterns. |
-| 🎯 [Docker Interview Questions](Docker-Interview-Questions.md) | 100+ Docker interview questions from beginner to advanced, including scenario-based and FAANG-style questions. |
+| Chapter | Topics Covered |
+|----------|----------------|
+| 📘 [Chapter 1 - Introduction to Docker](01-Introduction-to-Docker.md) | What is Docker, Why Docker, History, Virtual Machines vs Containers, Benefits, Use Cases, Docker Architecture Overview, Docker Workflow, First Container |
+| 📘 [Chapter 2 - Docker Architecture](02-Docker-Architecture.md) | Docker Client, Docker Daemon, Docker Engine, Docker Objects, Docker Registry, Internal Workflow, Docker Lifecycle |
+| 📘 [Chapter 3 - Installing Docker](03-Installing-Docker.md) | Installing Docker on Windows, Linux, and macOS, Docker Desktop, Verifying Installation, Docker Configuration |
+| 📘 [Chapter 4 - Docker Images](04-Docker-Images.md) | Docker Images, Image Layers, Union File System, Image Lifecycle, Image Commands, Image Optimization, Docker Hub |
+| 📘 [Chapter 5 - Docker Containers](05-Docker-Containers.md) | Container Lifecycle, Running Containers, Managing Containers, Container Commands, Executing Commands, Logs, Inspect, Resource Limits |
+| 📘 [Chapter 6 - Docker Volumes](06-Docker-Volumes.md) | Persistent Storage, Named Volumes, Bind Mounts, tmpfs Mounts, Volume Commands, Backup & Restore, Best Practices |
+| 📘 [Chapter 7 - Docker Networking](07-Docker-Networking.md) | Bridge Network, Host Network, None Network, Overlay Network, Macvlan, Port Mapping, DNS Resolution, Network Commands |
+| 📘 [Chapter 8 - Dockerfile](08-Dockerfile.md) | FROM, RUN, COPY, ADD, CMD, ENTRYPOINT, WORKDIR, ENV, ARG, USER, LABEL, HEALTHCHECK, EXPOSE, Best Practices |
+| 📘 [Chapter 9 - Docker Compose](09-Docker-Compose.md) | Multi-container Applications, compose.yaml, Services, Networks, Volumes, Environment Variables, Scaling, Compose Commands |
+| 📘 [Chapter 10 - Docker Registry](10-Docker-Registry.md) | Docker Hub, Private Registry, Repository, Image Tagging, Push & Pull Images, Authentication, Registry Security |
+| 📘 [Chapter 11 - Multi-Stage Builds](11-Multi-Stage-Builds.md) | Multi-Stage Builds, Build Stage, Runtime Stage, COPY --from, BuildKit, Image Optimization, Smaller Images |
+| 📘 [Chapter 12 - Docker Security](12-Docker-Security.md) | Docker Security Model, Linux Namespaces, cgroups, Capabilities, Seccomp, AppArmor, SELinux, Secrets, Image Scanning |
+| 📘 [Chapter 13 - Docker Logging & Monitoring](13-Docker-Logging-and-Monitoring.md) | Docker Logs, Logging Drivers, Log Rotation, Docker Stats, Docker Events, Health Checks, Prometheus, Grafana, Centralized Logging |
+| 📘 [Chapter 14 - Docker Best Practices](14-Docker-Best-Practices.md) | Dockerfile Best Practices, Security, Performance Optimization, Networking, Storage, CI/CD, Production Checklist, Anti-Patterns |
 
 ---
 
